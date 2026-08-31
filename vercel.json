@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/verificar-diario",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/processar-notificacoes",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

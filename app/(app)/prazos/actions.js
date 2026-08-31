@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
+import { criarClienteSupabaseAdmin } from "../../../lib/supabase/admin";
 import { criarClienteAnthropic } from "../../../lib/anthropic";
 import { somarDias, formatarDataISO } from "../../../lib/dias-uteis";
+import { enfileirarNotificacao } from "../../../lib/notificacoes/enfileirar";
 
 function extrairJson(texto) {
   // Claude às vezes envolve em ```json ... ``` mesmo pedindo só JSON puro -
@@ -39,6 +41,27 @@ async function criarPrazoEEvento({ supabase, user, escritorioId, peticaoId, desp
   });
   if (erroEvento) {
     return { erro: "Prazo salvo, mas não foi possível criar o evento na agenda. Confira em Prazos." };
+  }
+
+  // Etapa 5 - notifica o advogado dono da petição (não necessariamente
+  // quem colou o despacho, ex.: outro advogado do escritório pode ter
+  // identificado o prazo por ele). Nunca pode derrubar o fluxo de criação
+  // do prazo - erro aqui só loga, o redirect abaixo acontece de qualquer
+  // jeito.
+  try {
+    const { data: peticao } = await supabase.from("peticoes").select("titulo, advogado_id").eq("id", peticaoId).maybeSingle();
+    const admin = criarClienteSupabaseAdmin();
+    await enfileirarNotificacao({
+      admin,
+      escritorioId,
+      advogadoId: peticao?.advogado_id,
+      tipoEvento: "prazo_novo",
+      eventoId: prazoCriado.id,
+      titulo: "Novo prazo identificado",
+      mensagem: `${descricaoPrazo} — vence em ${new Date(`${dataLimite}T00:00:00`).toLocaleDateString("pt-BR")}. Petição: ${peticao?.titulo || "—"}.`,
+    });
+  } catch (err) {
+    console.error("[notificacoes] falha ao enfileirar prazo_novo", err);
   }
 
   redirect(`/agenda?data=${dataLimite}`);
