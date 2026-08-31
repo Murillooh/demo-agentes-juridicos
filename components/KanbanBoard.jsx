@@ -158,6 +158,22 @@ export default function KanbanBoard({ escritorioId, peticoesIniciais, advogados 
                       {p.area_direito} · {p.criador?.nome || "—"}
                     </p>
                     {parada && <span className="badge board-card-badge-parada">Parada há {dias} dia(s)</span>}
+                    {p.fase_kanban === "protocolo" && p.onedrive_status && (
+                      <p className="board-card-onedrive">
+                        OneDrive:{" "}
+                        {p.onedrive_status === "enviado" ? (
+                          <a href={p.onedrive_link} target="_blank" rel="noopener noreferrer">
+                            enviada ↗
+                          </a>
+                        ) : p.onedrive_status === "falha" ? (
+                          <Link href="/integracoes" className="board-card-onedrive-falha">
+                            falhou - ver Integrações
+                          </Link>
+                        ) : (
+                          "enviando…"
+                        )}
+                      </p>
+                    )}
                     {campoResponsavel && (
                       <label className="board-card-responsavel">
                         Responsável ({ROTULO_FASE[proximaFase]})

@@ -1,6 +1,12 @@
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
 import KanbanBoard from "../../../components/KanbanBoard";
 
+// moverFasePeticao (chamada a partir daqui) pode, ao entrar em Protocolo,
+// gerar o PDF e mandar pro OneDrive de forma síncrona (Etapa 7) - mesmo
+// raciocínio de /atualizacoes: dá mais tempo de execução do que o default
+// pra essa Server Action específica.
+export const maxDuration = 60;
+
 export default async function BoardPage() {
   const supabase = criarClienteSupabaseServidor();
   const user = await obterUsuario(supabase);
@@ -15,7 +21,7 @@ export default async function BoardPage() {
   const { data: peticoes } = await supabase
     .from("peticoes")
     .select(
-      "id, titulo, area_direito, fase_kanban, fase_atualizada_em, responsavel_revisao_id, responsavel_protocolo_id, criador:advogados!advogado_id(nome)"
+      "id, titulo, area_direito, fase_kanban, fase_atualizada_em, responsavel_revisao_id, responsavel_protocolo_id, onedrive_status, onedrive_erro, onedrive_link, criador:advogados!advogado_id(nome)"
     )
     .eq("escritorio_id", advogado.escritorio_id)
     .order("criado_em", { ascending: false });

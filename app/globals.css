@@ -462,6 +462,21 @@
     color: var(--danger);
   }
 
+  .board-card-onedrive {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+
+  .board-card-onedrive a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .board-card-onedrive-falha {
+    color: var(--danger) !important;
+  }
+
   .board-card-responsavel {
     margin-top: 10px;
     font-size: 0.66rem;

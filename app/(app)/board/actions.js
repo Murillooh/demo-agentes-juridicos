@@ -3,6 +3,7 @@
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
 import { criarClienteSupabaseAdmin } from "../../../lib/supabase/admin";
 import { enfileirarNotificacao } from "../../../lib/notificacoes/enfileirar";
+import { enviarPeticaoParaOneDrive } from "../../../lib/onedrive/enviar-peticao";
 
 const FASES = ["criacao", "revisao", "protocolo"];
 const CAMPO_RESPONSAVEL = { revisao: "responsavel_revisao_id", protocolo: "responsavel_protocolo_id" };
@@ -28,7 +29,14 @@ export async function moverFasePeticao(id, novaFase) {
 
   const { error: erroUpdate } = await supabase
     .from("peticoes")
-    .update({ fase_kanban: novaFase, fase_atualizada_em: new Date().toISOString() })
+    .update({
+      fase_kanban: novaFase,
+      fase_atualizada_em: new Date().toISOString(),
+      // Marca "enviando" já na hora do move (mesmo antes do PDF existir de
+      // verdade) - o board/tela de Integrações mostra esse estado
+      // imediatamente em vez de nada até o upload terminar.
+      ...(novaFase === "protocolo" ? { onedrive_status: "pendente" } : {}),
+    })
     .eq("id", id);
   if (erroUpdate) return { erro: "Não foi possível mover a petição." };
 
@@ -70,6 +78,25 @@ export async function moverFasePeticao(id, novaFase) {
     }
   } else if (erroTransicao) {
     console.error("[board] falha ao registrar transição", erroTransicao);
+  }
+
+  // Etapa 7 - "sair da coluna Protocolo" lido como "chegar em Protocolo":
+  // é o fim do fluxo do board (não existe 4ª coluna depois), o ponto em
+  // que a petição está pronta pra virar arquivo na pasta do cliente.
+  //
+  // AWAIT de propósito, não fire-and-forget: numa function serverless
+  // (Vercel), o processo pode ser encerrado assim que a Server Action
+  // retorna - uma Promise não aguardada corre risco real de ser cancelada
+  // no meio e o upload nunca completar. O feedback visual "imediato" do
+  // board já está garantido pelo optimistic update no client
+  // (KanbanBoard.jsx move o cartão antes mesmo de chamar essa action) -
+  // não depende de quanto tempo essa function ainda leva pra retornar.
+  if (novaFase === "protocolo") {
+    try {
+      await enviarPeticaoParaOneDrive(id);
+    } catch (err) {
+      console.error("[onedrive] falha ao enviar petição", err);
+    }
   }
 
   return { sucesso: true };

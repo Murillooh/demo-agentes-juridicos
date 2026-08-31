@@ -148,6 +148,25 @@ export async function salvarNumeroProcesso(id, numeroProcesso) {
   return { sucesso: true };
 }
 
+// Etapa 7 - nenhuma etapa anterior capturou "de qual cliente é essa
+// petição" (Etapa 2 só pede área do direito + descrição do caso). Sem
+// isso não tem como montar a convenção de pasta por cliente no OneDrive -
+// mesmo padrão de campo editável pós-criação do número de processo acima.
+export async function salvarNomeCliente(id, nomeCliente) {
+  const supabase = criarClienteSupabaseServidor();
+  const user = await obterUsuario(supabase);
+  if (!supabase || !user) return { erro: "Sessão expirada." };
+
+  const { error } = await supabase
+    .from("peticoes")
+    .update({ nome_cliente: String(nomeCliente || "").trim() || null })
+    .eq("id", id);
+  if (error) return { erro: "Não foi possível salvar o nome do cliente." };
+
+  revalidatePath(`/peticoes/${id}`);
+  return { sucesso: true };
+}
+
 export async function finalizarPeticao(id) {
   const supabase = criarClienteSupabaseServidor();
   const user = await obterUsuario(supabase);

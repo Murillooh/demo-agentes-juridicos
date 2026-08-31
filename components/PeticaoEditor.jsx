@@ -1,18 +1,23 @@
 "use client";
 import { useState } from "react";
-import { salvarPeticao, finalizarPeticao, salvarNumeroProcesso } from "../app/(app)/peticoes/actions";
+import { salvarPeticao, finalizarPeticao, salvarNumeroProcesso, salvarNomeCliente } from "../app/(app)/peticoes/actions";
+
+const ROTULO_ONEDRIVE = { enviado: "Enviada ao OneDrive", falha: "Falha ao enviar ao OneDrive", pendente: "Enviando ao OneDrive…" };
 
 export default function PeticaoEditor({ peticao, escritorio }) {
   const [conteudo, setConteudo] = useState(peticao.conteudo);
   const [status, setStatus] = useState(peticao.status);
   const [numeroProcesso, setNumeroProcesso] = useState(peticao.numero_processo || "");
+  const [nomeCliente, setNomeCliente] = useState(peticao.nome_cliente || "");
   const [salvando, setSalvando] = useState(false);
   const [salvandoNumero, setSalvandoNumero] = useState(false);
+  const [salvandoCliente, setSalvandoCliente] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
   const sujo = conteudo !== peticao.conteudo;
   const numeroSujo = numeroProcesso !== (peticao.numero_processo || "");
+  const clienteSujo = nomeCliente !== (peticao.nome_cliente || "");
 
   async function salvarNumero() {
     setSalvandoNumero(true);
@@ -22,6 +27,20 @@ export default function PeticaoEditor({ peticao, escritorio }) {
       setErro(resposta.erro);
     } else {
       peticao.numero_processo = numeroProcesso;
+    }
+  }
+
+  // Nome do cliente é o que define a pasta no OneDrive (Etapa 7) - vale
+  // preencher antes da petição chegar em Protocolo no Board, senão o
+  // envio cai em "Sem cliente definido".
+  async function salvarCliente() {
+    setSalvandoCliente(true);
+    const resposta = await salvarNomeCliente(peticao.id, nomeCliente);
+    setSalvandoCliente(false);
+    if (resposta?.erro) {
+      setErro(resposta.erro);
+    } else {
+      peticao.nome_cliente = nomeCliente;
     }
   }
 
@@ -97,6 +116,42 @@ export default function PeticaoEditor({ peticao, escritorio }) {
           {status === "finalizada" ? "Finalizada" : "Rascunho"}
         </span>
       </div>
+
+      <label>
+        Nome do cliente
+        <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+          <input
+            value={nomeCliente}
+            onChange={(e) => setNomeCliente(e.target.value)}
+            placeholder="Nome do cliente"
+            style={{ flex: 1 }}
+          />
+          <button type="button" className="secundario" onClick={salvarCliente} disabled={salvandoCliente || !clienteSujo}>
+            {salvandoCliente ? "Salvando…" : "Salvar cliente"}
+          </button>
+        </div>
+      </label>
+      <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-10px" }}>
+        Define a pasta onde a petição é salva no OneDrive quando chega em Protocolo no Board.
+        {peticao.onedrive_status && (
+          <>
+            {" "}
+            <strong style={{ color: peticao.onedrive_status === "falha" ? "var(--danger)" : "var(--accent)" }}>
+              {ROTULO_ONEDRIVE[peticao.onedrive_status]}
+            </strong>
+            {peticao.onedrive_status === "enviado" && peticao.onedrive_link && (
+              <>
+                {" "}
+                ·{" "}
+                <a href={peticao.onedrive_link} target="_blank" rel="noopener noreferrer">
+                  abrir no OneDrive
+                </a>
+              </>
+            )}
+            {peticao.onedrive_status === "falha" && peticao.onedrive_erro && <> — {peticao.onedrive_erro}</>}
+          </>
+        )}
+      </p>
 
       <label>
         Número do processo (após protocolar)

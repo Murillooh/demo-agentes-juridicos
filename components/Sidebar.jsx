@@ -11,8 +11,10 @@ const ITENS_NAV = [
   { href: "/peticoes-base", label: "Petições-base" },
   { href: "/agenda", label: "Agenda" },
   { href: "/prazos/novo", label: "Identificar Prazo" },
+  { href: "/contratos", label: "Contratos" },
   { href: "/atualizacoes", label: "Diário Oficial" },
   { href: "/notificacoes", label: "Notificações" },
+  { href: "/integracoes", label: "Integrações" },
   { href: "/configuracoes", label: "Configurações" },
 ];
 
