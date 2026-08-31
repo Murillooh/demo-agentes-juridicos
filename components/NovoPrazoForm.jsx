@@ -46,7 +46,7 @@ export default function NovoPrazoForm({ peticoes }) {
             <textarea defaultValue={estadoIdentificar.despachoTexto} rows={4} disabled />
           </label>
 
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "14px" }}>
+          <div className="grade-campos grade-campos-2-1">
             <label>
               Descrição do prazo
               <input name="descricaoPrazo" required placeholder='Ex.: "Contestação"' />
@@ -74,7 +74,7 @@ export default function NovoPrazoForm({ peticoes }) {
   return (
     <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
       <form action={acaoIdentificar} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "14px" }}>
+        <div className="grade-campos grade-campos-2-1">
           <label>
             Petição / processo de origem
             <select name="peticaoId" required defaultValue="">

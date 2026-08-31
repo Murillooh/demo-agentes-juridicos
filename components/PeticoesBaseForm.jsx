@@ -29,7 +29,7 @@ export default function PeticoesBaseForm({ peticoesBase }) {
           escritório escreve.
         </p>
         <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "14px" }}>
+          <div className="grade-campos grade-campos-1-2">
             <label>
               Área do direito
               <select name="areaDireito" required defaultValue="">

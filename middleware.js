@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const ROTAS_PUBLICAS = ["/", "/onboarding"];
+const ROTAS_PUBLICAS = ["/", "/onboarding", "/demo"];
 
 // Renova a sessão do Supabase a cada request e decide o roteamento:
 //   sem sessão + rota protegida         -> "/"

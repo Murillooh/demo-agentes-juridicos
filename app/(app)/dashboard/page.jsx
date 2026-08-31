@@ -1,4 +1,15 @@
+import Link from "next/link";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
+import TourBoasVindas from "../../../components/TourBoasVindas";
+
+function ResumoCard({ numero, rotulo, href }) {
+  return (
+    <Link href={href} className="glass-panel resumo-card" style={{ textDecoration: "none", color: "inherit" }}>
+      <div className="resumo-card-numero">{numero}</div>
+      <div className="resumo-card-rotulo">{rotulo}</div>
+    </Link>
+  );
+}
 
 export default async function DashboardPage() {
   const supabase = criarClienteSupabaseServidor();
@@ -6,7 +17,7 @@ export default async function DashboardPage() {
 
   const { data: advogado } = await supabase
     .from("advogados")
-    .select("nome, escritorios(nome)")
+    .select("nome, tour_visto, escritorios(nome)")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -16,17 +27,40 @@ export default async function DashboardPage() {
     .eq("advogado_id", user.id)
     .order("principal", { ascending: false });
 
+  // head:true - só a contagem, sem trazer as linhas. 4 números que dão uma
+  // visão real do escritório no primeiro olhar, em vez do texto fixo
+  // "próximas etapas" que ficou esquecido aqui desde a Etapa 0.
+  const [{ count: peticoesAndamento }, { count: prazosPendentes }, { count: atualizacoesNaoLidas }, { count: contratosAnalisados }] =
+    await Promise.all([
+      supabase.from("peticoes").select("id", { count: "exact", head: true }).neq("fase_kanban", "protocolo"),
+      supabase.from("prazos").select("id", { count: "exact", head: true }).eq("status", "pendente"),
+      supabase.from("atualizacoes_diario").select("id", { count: "exact", head: true }).eq("lida", false),
+      supabase.from("contratos").select("id", { count: "exact", head: true }).eq("status", "concluido"),
+    ]);
+
   return (
     <>
+      {!advogado?.tour_visto && <TourBoasVindas />}
+
       <h1 className="titulo-pagina">Olá, {advogado?.nome || "advogado"}</h1>
       <p className="subtitulo-pagina">{advogado?.escritorios?.nome}</p>
+
+      <div className="resumo-grade">
+        <ResumoCard numero={peticoesAndamento || 0} rotulo="Petições em andamento" href="/board" />
+        <ResumoCard numero={prazosPendentes || 0} rotulo="Prazos pendentes" href="/agenda" />
+        <ResumoCard numero={atualizacoesNaoLidas || 0} rotulo="Atualizações não lidas" href="/atualizacoes" />
+        <ResumoCard numero={contratosAnalisados || 0} rotulo="Contratos analisados" href="/contratos" />
+      </div>
 
       <div className="glass-panel" style={{ padding: "28px", maxWidth: "480px" }}>
         <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
           Suas OABs
         </h3>
         {!oabs || oabs.length === 0 ? (
-          <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Nenhuma OAB cadastrada.</p>
+          <p style={{ color: "var(--text-dim)", fontSize: "14px", lineHeight: 1.5 }}>
+            Nenhuma OAB cadastrada ainda. Sem ela, o Diário Oficial não tem o que monitorar - peça pra alguém do
+            escritório adicionar.
+          </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {oabs.map((oab) => (
@@ -50,11 +84,6 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
-
-      <p style={{ color: "var(--text-dim)", fontSize: "13px", marginTop: "24px" }}>
-        Fundação da plataforma. Geração de petição, prazos, Diário Oficial, notificações e Kanban vêm nas
-        próximas etapas.
-      </p>
     </>
   );
 }

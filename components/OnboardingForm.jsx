@@ -87,7 +87,7 @@ export default function OnboardingForm() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+      <div className="grade-campos grade-campos-1-1">
         <div>
           <label>Seu nome</label>
           <input value={nomeAdvogado} onChange={(e) => setNomeAdvogado(e.target.value)} required placeholder="Nome completo" />

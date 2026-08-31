@@ -1,15 +1,7 @@
 "use server";
 
 import { criarClienteSupabaseAdmin } from "../../lib/supabase/admin";
-
-// 12 caracteres, sem ambíguos (0/O, 1/l/I) - fácil de ler/digitar numa tela,
-// difícil de adivinhar. Usada só uma vez (o advogado troca no 1º login).
-function gerarSenhaTemporaria() {
-  const alfabeto = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  let senha = "";
-  for (let i = 0; i < 12; i++) senha += alfabeto[Math.floor(Math.random() * alfabeto.length)];
-  return senha;
-}
+import { gerarSenhaTemporaria } from "../../lib/senha-temporaria";
 
 // Cria Escritório + 1º Advogado (com senha temporária, obrigado a trocar no
 // 1º login) + as OABs dele. Roda com a service role key (ignora RLS) porque

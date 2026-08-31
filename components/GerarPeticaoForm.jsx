@@ -21,7 +21,7 @@ export default function GerarPeticaoForm() {
   return (
     <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
       <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "14px" }}>
+        <div className="grade-campos grade-campos-1-2">
           <label>
             Área do direito
             <select name="areaDireito" required defaultValue="">

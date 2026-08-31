@@ -47,7 +47,7 @@ export default async function AgendaPage({ searchParams }) {
       <h1 className="titulo-pagina">Agenda</h1>
       <p className="subtitulo-pagina">Prazos automáticos e reuniões, num só calendário.</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "28px", alignItems: "start" }}>
+      <div className="agenda-layout">
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
             <Link href={`/agenda?mes=${paramMes(mesAnterior)}`}>
