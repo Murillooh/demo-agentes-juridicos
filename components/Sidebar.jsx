@@ -3,7 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { sair } from "../app/login/actions";
 
-const ITENS_NAV = [{ href: "/dashboard", label: "Início" }];
+const ITENS_NAV = [
+  { href: "/dashboard", label: "Início" },
+  { href: "/peticoes/nova", label: "Nova Petição" },
+  { href: "/peticoes", label: "Petições" },
+  { href: "/peticoes-base", label: "Petições-base" },
+  { href: "/agenda", label: "Agenda" },
+  { href: "/prazos/novo", label: "Identificar Prazo" },
+  { href: "/atualizacoes", label: "Diário Oficial" },
+  { href: "/configuracoes", label: "Configurações" },
+];
 
 function iniciais(nome, email) {
   const base = (nome || email || "?").trim();
