@@ -7,6 +7,7 @@ const ITENS_NAV = [
   { href: "/dashboard", label: "Início" },
   { href: "/peticoes/nova", label: "Nova Petição" },
   { href: "/peticoes", label: "Petições" },
+  { href: "/board", label: "Board" },
   { href: "/peticoes-base", label: "Petições-base" },
   { href: "/agenda", label: "Agenda" },
   { href: "/prazos/novo", label: "Identificar Prazo" },

@@ -8,9 +8,13 @@ export default async function PeticoesPage() {
   // RLS já filtra por escritório - esse select devolve as petições de todos
   // os advogados do mesmo escritório (histórico "por escritório e por
   // advogado" pedido na Etapa 2), não só as minhas.
+  //
+  // "!advogado_id" desambigua o embed: desde a Etapa 6, peticoes tem 3 FKs
+  // pra advogados (advogado_id, responsavel_revisao_id,
+  // responsavel_protocolo_id) - sem a dica o PostgREST não sabe qual usar.
   const { data: peticoes } = await supabase
     .from("peticoes")
-    .select("id, titulo, area_direito, status, criado_em, atualizado_em, advogados(nome)")
+    .select("id, titulo, area_direito, status, criado_em, atualizado_em, advogados!advogado_id(nome)")
     .order("criado_em", { ascending: false });
 
   return (
