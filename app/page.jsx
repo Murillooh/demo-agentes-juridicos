@@ -3,7 +3,6 @@ import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
-import Lenis from "@studio-freight/lenis";
 import LoginForm from "../components/LoginForm";
 import { Scale, FileText, Users, ArrowRight, Activity, Shield, Zap, Sparkles, ChevronRight, Gavel, FileCheck, ArrowUp } from "lucide-react";
 
@@ -48,30 +47,14 @@ export default function Home() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      direction: "vertical",
-      gestureDirection: "vertical",
-      smooth: true,
-      mouseMultiplier: 1,
-      smoothTouch: false,
-    });
-
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-
-    lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
-
-    return () => lenis.destroy();
-  }, []);
-
+  // Scroll suave via CSS nativo (scroll-behavior), não Lenis - a versão
+  // usada pelo sistema antigo (@studio-freight/lenis 1.0.42, já
+  // descontinuada) conflita com o double-effect do React 18 em dev
+  // (StrictMode monta o efeito 2x): a 2ª instância nasce em cima do
+  // transform que a 1ª já tinha aplicado, embaralhando a posição visual de
+  // cada seção. Scroll nativo funciona igual bem com o ScrollTrigger do
+  // GSAP (ele já escuta o scroll da window sozinho, sem precisar de nenhum
+  // scroller customizado) e não tem essa classe de bug.
   useGSAP(
     () => {
       gsap.from(".hero-badge", { y: -20, opacity: 0, duration: 1, ease: "power3.out" });
