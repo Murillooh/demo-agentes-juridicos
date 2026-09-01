@@ -2,13 +2,8 @@
 import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import LoginForm from "../components/LoginForm";
 import { Scale, FileText, Users, ArrowRight, Activity, Shield, Zap, Sparkles, ChevronRight, Gavel, FileCheck, ArrowUp } from "lucide-react";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger, useGSAP);
-}
 
 // Landing trazida de volta do demo-agentes-juridicos (era a tela real do
 // projeto antes do repo virar a plataforma multi-tenant - ficou pra trás no
@@ -47,14 +42,15 @@ export default function Home() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Scroll suave via CSS nativo (scroll-behavior), não Lenis - a versão
-  // usada pelo sistema antigo (@studio-freight/lenis 1.0.42, já
-  // descontinuada) conflita com o double-effect do React 18 em dev
-  // (StrictMode monta o efeito 2x): a 2ª instância nasce em cima do
-  // transform que a 1ª já tinha aplicado, embaralhando a posição visual de
-  // cada seção. Scroll nativo funciona igual bem com o ScrollTrigger do
-  // GSAP (ele já escuta o scroll da window sozinho, sem precisar de nenhum
-  // scroller customizado) e não tem essa classe de bug.
+  // Sem ScrollTrigger de propósito - a versão original usava scroll/scrub
+  // pesado (parallax do mockup, reveal por seção, contagem dos números)
+  // que dependia de medir a altura real do documento (imagens/fontes
+  // carregadas) pra calcular onde cada trigger começa/termina. Qualquer
+  // desalinhamento nessa conta (fonte ainda carregando, StrictMode do dev
+  // rodando o efeito 2x) fazia seções inteiras ficarem sobrepostas na
+  // tela - bug real, reproduzido de verdade, não hipotético. Fica só a
+  // entrada simples do hero (roda 1x no carregamento, não depende de
+  // posição de scroll nenhuma) - menos "wow", mas não quebra.
   useGSAP(
     () => {
       gsap.from(".hero-badge", { y: -20, opacity: 0, duration: 1, ease: "power3.out" });
@@ -70,58 +66,6 @@ export default function Home() {
 
       gsap.from(".hero-float-1", { y: 40, x: -30, opacity: 0, duration: 1.5, ease: "elastic.out(1, 0.75)", delay: 1.2 });
       gsap.from(".hero-float-2", { y: -40, x: 30, opacity: 0, duration: 1.5, ease: "elastic.out(1, 0.75)", delay: 1.4 });
-
-      gsap.to(".hero-mockup-main", {
-        scrollTrigger: { trigger: ".hero-section", start: "top top", end: "bottom top", scrub: 1 },
-        y: 100,
-        rotationX: 15,
-        opacity: 0.5,
-      });
-
-      gsap.from(".partner-banner", {
-        scrollTrigger: { trigger: ".partner-banner", start: "top 90%" },
-        opacity: 0,
-        y: 20,
-        duration: 1,
-        ease: "power3.out",
-      });
-
-      gsap.utils.toArray(".section-title-wrapper").forEach((el) => {
-        gsap.from(el, { scrollTrigger: { trigger: el, start: "top 85%" }, opacity: 0, y: 40, duration: 1, ease: "power3.out" });
-      });
-
-      gsap.from(".bento-card", {
-        scrollTrigger: { trigger: ".bento-grid", start: "top 75%" },
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.15,
-        ease: "power3.out",
-      });
-
-      gsap.from(".stat-number", {
-        scrollTrigger: { trigger: ".stats-section", start: "top 80%" },
-        textContent: 0,
-        duration: 2,
-        ease: "power2.out",
-        snap: { textContent: 1 },
-        stagger: 0.2,
-      });
-
-      gsap.from(".cta-section", {
-        scrollTrigger: { trigger: ".cta-wrapper", start: "top 80%" },
-        scale: 0.95,
-        y: 40,
-        opacity: 0,
-        duration: 1.2,
-        ease: "power3.out",
-      });
-
-      gsap.to(".cta-bg-glow", {
-        scrollTrigger: { trigger: ".cta-wrapper", start: "top bottom", end: "bottom top", scrub: true },
-        y: 100,
-        scale: 1.2,
-      });
     },
     { scope: container }
   );
