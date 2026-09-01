@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
 import { criarClienteSupabaseAdmin } from "../../../lib/supabase/admin";
-import { extrairTexto, MIN_CARACTERES_TEXTO } from "../../../lib/contratos/extrair-texto";
+import { MIN_CARACTERES_TEXTO } from "../../../lib/contratos/constantes";
 import { analisarContrato } from "../../../lib/contratos/analisar";
 
 const TIPOS_ACEITOS = {
@@ -79,6 +79,15 @@ export async function enviarContrato(_estadoAnterior, formData) {
   // já aplicado nas integrações anteriores (Etapas 5 e 7).
   let texto = "";
   try {
+    // Import dinâmico, só aqui dentro (não no topo do arquivo) - pdf-parse
+    // carrega pdfjs-dist inteiro (pesado, e precisa de @napi-rs/canvas pra
+    // funcionar direito no serverless da Vercel) só de ser importado. Com
+    // import estático no topo, esse custo/risco pesava em TODA action
+    // deste arquivo, inclusive reanalisarContrato (que nem usa isso) -
+    // "Analisar de novo" de um contrato já lido quebrava com
+    // "ReferenceError: DOMMatrix is not defined" só por importar um módulo
+    // que nunca chegava a rodar.
+    const { extrairTexto } = await import("../../../lib/contratos/extrair-texto");
     texto = await extrairTexto(bytes, tipoArquivo);
   } catch {
     await supabase.from("contratos").insert({
