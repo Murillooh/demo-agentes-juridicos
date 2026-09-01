@@ -1,0 +1,119 @@
+"use client";
+import { useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
+import { buscarProcesso, acompanharProcesso } from "../app/(app)/processos/actions";
+import { TRIBUNAIS, detectarTribunal, validarNumeroCnj } from "../lib/cnj";
+
+const ESTADO_INICIAL = { erro: "" };
+
+function BotaoBuscar() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? "Consultando o DataJud…" : "Buscar processo"}
+    </button>
+  );
+}
+
+export default function BuscaProcessoForm() {
+  const [estado, acao] = useFormState(buscarProcesso, ESTADO_INICIAL);
+  const [numero, setNumero] = useState("");
+  const [tribunal, setTribunal] = useState("");
+  const [acompanhando, setAcompanhando] = useState(false);
+  const [msgAcompanhar, setMsgAcompanhar] = useState("");
+
+  function aoMudarNumero(valor) {
+    setNumero(valor);
+    if (validarNumeroCnj(valor)) {
+      const detectado = detectarTribunal(valor);
+      if (detectado) setTribunal(detectado);
+    }
+  }
+
+  async function adicionarAcompanhamento() {
+    if (!estado?.processo) return;
+    setAcompanhando(true);
+    const resposta = await acompanharProcesso(estado.numeroCnj, estado.tribunal, estado.processo.situacaoAtual);
+    setAcompanhando(false);
+    setMsgAcompanhar(resposta.erro || "Processo em acompanhamento - avisamos quando mudar.");
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
+        <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <label>
+            Número do processo (CNJ)
+            <input
+              name="numeroCnj"
+              value={numero}
+              onChange={(e) => aoMudarNumero(e.target.value)}
+              placeholder="0000000-00.0000.0.00.0000"
+              required
+            />
+          </label>
+          <label>
+            Tribunal
+            <select name="tribunal" value={tribunal} onChange={(e) => setTribunal(e.target.value)} required>
+              <option value="">Selecione…</option>
+              {TRIBUNAIS.map((t) => (
+                <option key={t.sigla} value={t.sigla}>
+                  {t.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-10px" }}>
+            Detectamos o tribunal sozinhos a partir do número CNJ quando possível - confira antes de buscar.
+          </p>
+          {estado?.erro && <p className="erro">{estado.erro}</p>}
+          <BotaoBuscar />
+        </form>
+      </div>
+
+      {estado?.processo && (
+        <div className="glass-panel" style={{ padding: "28px", maxWidth: "820px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
+            <div>
+              <h3 className="titulo-secao" style={{ marginBottom: "6px" }}>
+                {estado.processo.numeroCnj}
+              </h3>
+              <p style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+                {estado.processo.classe} · {estado.processo.tribunal} · {estado.processo.orgaoJulgador}
+              </p>
+            </div>
+            <button type="button" className="secundario" onClick={adicionarAcompanhamento} disabled={acompanhando}>
+              {acompanhando ? "Adicionando…" : "Acompanhar automaticamente"}
+            </button>
+          </div>
+
+          <p>
+            <strong>Assunto:</strong> {estado.processo.assunto}
+          </p>
+          <p>
+            <strong>Distribuído em:</strong> {estado.processo.dataDistribuicao}
+          </p>
+          <p>
+            <strong>Situação atual:</strong> {estado.processo.situacaoAtual}
+          </p>
+
+          {msgAcompanhar && <p className="info">{msgAcompanhar}</p>}
+
+          <div>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, marginBottom: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Andamentos recentes
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {estado.processo.andamentos.map((a, i) => (
+                <div key={i} style={{ padding: "10px 12px", background: "var(--panel-2)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{a.data}</span>
+                  <p style={{ marginTop: "2px" }}>{a.descricao}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

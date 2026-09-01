@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { souAdmin } from "./lib/admin";
+import { telaPermitida, primeiraTelaPermitida } from "./lib/permissoes";
 
 const ROTAS_PUBLICAS = ["/", "/onboarding", "/demo"];
 
 // Renova a sessão do Supabase a cada request e decide o roteamento:
 //   sem sessão + rota protegida         -> "/"
+//   com sessão + admin (Etapa 10)       -> "/admin" em vez de "/dashboard"
 //   com sessão + precisa trocar senha   -> "/trocar-senha" (única rota liberada)
 //   com sessão + "/" ou "/onboarding"   -> "/dashboard"
+//   com sessão + tela sem permissão     -> primeira tela liberada (Etapa 10)
 //
 // Timeout em toda chamada ao Supabase por design - um engasgo aqui, sem
 // isso, trava a página inteira até a Vercel matar a função (aconteceu de
@@ -58,20 +62,32 @@ export async function middleware(request) {
     return NextResponse.redirect(url);
   }
 
+  const ehAdmin = souAdmin(user?.email);
+
   if (rotaPublica && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    // Admin não tem linha em "advogados" (não é dono de escritório) -
+    // /dashboard quebraria pra ele. Vai direto pro painel.
+    url.pathname = ehAdmin ? "/admin" : "/dashboard";
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname !== "/trocar-senha") {
+  // Admin não passa pelas checagens de advogado (senha temporária,
+  // permissão por tela) - elas não fazem sentido pra quem não é dono de
+  // escritório nenhum.
+  if (user && !ehAdmin && pathname !== "/trocar-senha") {
     try {
       const { data: advogado } = await comTimeout(
-        supabase.from("advogados").select("precisa_trocar_senha").eq("id", user.id).maybeSingle()
+        supabase.from("advogados").select("precisa_trocar_senha, permissoes").eq("id", user.id).maybeSingle()
       );
       if (advogado?.precisa_trocar_senha) {
         const url = request.nextUrl.clone();
         url.pathname = "/trocar-senha";
+        return NextResponse.redirect(url);
+      }
+      if (advogado && !telaPermitida(pathname, advogado.permissoes)) {
+        const url = request.nextUrl.clone();
+        url.pathname = primeiraTelaPermitida(advogado.permissoes);
         return NextResponse.redirect(url);
       }
     } catch {

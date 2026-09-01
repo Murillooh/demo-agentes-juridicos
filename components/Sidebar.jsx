@@ -4,18 +4,20 @@ import { usePathname } from "next/navigation";
 import { sair } from "../app/login/actions";
 
 const ITENS_NAV = [
-  { href: "/dashboard", label: "Início" },
-  { href: "/peticoes/nova", label: "Nova Petição" },
-  { href: "/peticoes", label: "Petições" },
-  { href: "/board", label: "Board" },
-  { href: "/peticoes-base", label: "Petições-base" },
-  { href: "/agenda", label: "Agenda" },
-  { href: "/prazos/novo", label: "Identificar Prazo" },
-  { href: "/contratos", label: "Contratos" },
-  { href: "/atualizacoes", label: "Diário Oficial" },
-  { href: "/notificacoes", label: "Notificações" },
-  { href: "/integracoes", label: "Integrações" },
-  { href: "/configuracoes", label: "Configurações" },
+  { href: "/dashboard", label: "Início", chave: "dashboard" },
+  { href: "/peticoes/nova", label: "Nova Petição", chave: "peticoes" },
+  { href: "/peticoes", label: "Petições", chave: "peticoes" },
+  { href: "/board", label: "Board", chave: "board" },
+  { href: "/peticoes-base", label: "Petições-base", chave: "peticoes-base" },
+  { href: "/agenda", label: "Agenda", chave: "agenda" },
+  { href: "/prazos/novo", label: "Identificar Prazo", chave: "prazos" },
+  { href: "/processos", label: "Buscar Processo", chave: "processos" },
+  { href: "/processos/acompanhamento", label: "Acompanhamento", chave: "processos" },
+  { href: "/contratos", label: "Contratos", chave: "contratos" },
+  { href: "/atualizacoes", label: "Diário Oficial", chave: "atualizacoes" },
+  { href: "/notificacoes", label: "Notificações", chave: "notificacoes" },
+  { href: "/integracoes", label: "Integrações", chave: "integracoes" },
+  { href: "/configuracoes", label: "Configurações", chave: null }, // nunca restrito, igual lib/permissoes.js
 ];
 
 function iniciais(nome, email) {
@@ -25,8 +27,13 @@ function iniciais(nome, email) {
   return base.slice(0, 2).toUpperCase();
 }
 
-export default function Sidebar({ nome, email, nomeEscritorio }) {
+// permissoes: null = tudo liberado (padrão), array = só o que estiver
+// listado - mesma semântica de lib/permissoes.js. Filtro aqui é só
+// cosmético (esconde o link); o bloqueio de verdade é no middleware, que
+// não dá pra contornar digitando a URL direto.
+export default function Sidebar({ nome, email, nomeEscritorio, permissoes }) {
   const pathname = usePathname();
+  const itensVisiveis = ITENS_NAV.filter((item) => !item.chave || !permissoes || permissoes.includes(item.chave));
 
   return (
     <aside className="sidebar">
@@ -36,7 +43,7 @@ export default function Sidebar({ nome, email, nomeEscritorio }) {
       </div>
 
       <nav className="sidebar-nav">
-        {ITENS_NAV.map((item) => (
+        {itensVisiveis.map((item) => (
           <Link key={item.href} href={item.href} className={pathname === item.href ? "ativo" : ""}>
             {item.label}
           </Link>

@@ -29,7 +29,7 @@ export default async function AppLayout({ children }) {
 
   const { data: advogado } = await supabase
     .from("advogados")
-    .select("nome, email, precisa_trocar_senha, escritorios(nome)")
+    .select("nome, email, precisa_trocar_senha, permissoes, escritorios(nome, cor_sistema)")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -40,9 +40,24 @@ export default async function AppLayout({ children }) {
     redirect("/trocar-senha");
   }
 
+  // White-label (Etapa 10) - cor do escritório sobrescreve --accent/
+  // --accent-glow via <style> injetado, mesma ideia do sistema anterior.
+  // Default (#c9a24b) não gera override nenhum, então escritório sem cor
+  // definida continua exatamente igual a antes dessa feature existir.
+  const corSistema = advogado?.escritorios?.cor_sistema;
+  const corPersonalizada = corSistema && corSistema !== "#c9a24b";
+
   return (
     <div className="app-layout">
-      <Sidebar nome={advogado?.nome} email={advogado?.email || user.email} nomeEscritorio={advogado?.escritorios?.nome} />
+      {corPersonalizada && (
+        <style>{`:root { --accent: ${corSistema}; --accent-hover: ${corSistema}; --accent-glow: ${corSistema}26; }`}</style>
+      )}
+      <Sidebar
+        nome={advogado?.nome}
+        email={advogado?.email || user.email}
+        nomeEscritorio={advogado?.escritorios?.nome}
+        permissoes={advogado?.permissoes}
+      />
       <main className="app-main">{children}</main>
     </div>
   );
