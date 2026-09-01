@@ -40,39 +40,43 @@ export default function BuscaProcessoForm() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
+      <div className="glass-panel" style={{ padding: "28px" }}>
         <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <label>
-            Número do processo (CNJ)
-            <input
-              name="numeroCnj"
-              value={numero}
-              onChange={(e) => aoMudarNumero(e.target.value)}
-              placeholder="0000000-00.0000.0.00.0000"
-              required
-            />
-          </label>
-          <label>
-            Tribunal
-            <select name="tribunal" value={tribunal} onChange={(e) => setTribunal(e.target.value)} required>
-              <option value="">Selecione…</option>
-              {TRIBUNAIS.map((t) => (
-                <option key={t.sigla} value={t.sigla}>
-                  {t.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-10px" }}>
+          <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap" }}>
+            <label style={{ flex: "2 1 320px" }}>
+              Número do processo (CNJ)
+              <input
+                name="numeroCnj"
+                value={numero}
+                onChange={(e) => aoMudarNumero(e.target.value)}
+                placeholder="0000000-00.0000.0.00.0000"
+                required
+              />
+            </label>
+            <label style={{ flex: "1 1 220px" }}>
+              Tribunal
+              <select name="tribunal" value={tribunal} onChange={(e) => setTribunal(e.target.value)} required>
+                <option value="">Selecione…</option>
+                {TRIBUNAIS.map((t) => (
+                  <option key={t.sigla} value={t.sigla}>
+                    {t.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div style={{ flex: "0 0 auto" }}>
+              <BotaoBuscar />
+            </div>
+          </div>
+          <p style={{ fontSize: "12px", color: "var(--text-dim)" }}>
             Detectamos o tribunal sozinhos a partir do número CNJ quando possível - confira antes de buscar.
           </p>
           {estado?.erro && <p className="erro">{estado.erro}</p>}
-          <BotaoBuscar />
         </form>
       </div>
 
       {estado?.processo && (
-        <div className="glass-panel" style={{ padding: "28px", maxWidth: "820px", display: "flex", flexDirection: "column", gap: "24px" }}>
+        <div className="glass-panel" style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
             <div>
               <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "22px", marginBottom: "6px" }}>
