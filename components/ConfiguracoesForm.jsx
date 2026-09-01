@@ -17,7 +17,7 @@ export default function ConfiguracoesForm({ nome, logoUrl }) {
   const [estado, acao] = useFormState(atualizarEscritorio, ESTADO_INICIAL);
 
   return (
-    <div className="glass-panel" style={{ padding: "28px", maxWidth: "520px" }}>
+    <div className="glass-panel" style={{ padding: "28px" }}>
       <h3 className="titulo-secao" style={{ marginBottom: "20px" }}>
         Identidade do escritório
       </h3>

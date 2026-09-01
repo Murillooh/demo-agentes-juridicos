@@ -18,7 +18,7 @@ export default function NotificacoesConfigForm({ canalEmail, canalWhatsapp, tele
   const [estadoTelefone, acaoTelefone] = useFormState(salvarTelefoneWhatsapp, ESTADO_INICIAL);
 
   return (
-    <div className="glass-panel" style={{ padding: "28px", maxWidth: "520px" }}>
+    <div className="glass-panel" style={{ padding: "28px" }}>
       <h3 className="titulo-secao" style={{ marginBottom: "20px" }}>
         Notificações
       </h3>
