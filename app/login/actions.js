@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { criarClienteSupabaseServidor } from "../../lib/supabase/server";
+import { souAdmin } from "../../lib/admin";
 
 function traduzirErro(mensagem) {
   const mapa = {
@@ -28,7 +29,11 @@ export async function entrar(_estadoAnterior, formData) {
     return { erro: traduzirErro(error.message) };
   }
 
-  redirect("/dashboard");
+  // Admin não tem linha em "advogados" - /dashboard quebra pra ele. Mesma
+  // regra do middleware (rotaPublica + user), só que aqui porque essa
+  // Server Action redireciona direto, sem passar pelo "/" onde o
+  // middleware faria essa escolha sozinho.
+  redirect(souAdmin(email) ? "/admin" : "/dashboard");
 }
 
 export async function sair() {
