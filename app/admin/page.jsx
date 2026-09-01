@@ -11,7 +11,7 @@ export default async function AdminPage() {
   const { data: contas } = supabaseAdmin
     ? await supabaseAdmin
         .from("advogados")
-        .select("id, nome, email, permissoes, criado_em, escritorio_id, escritorios(nome, logo_url, cor_sistema)")
+        .select("id, nome, email, permissoes, aprovado, criado_em, escritorio_id, escritorios(nome, logo_url, cor_sistema)")
         .order("criado_em", { ascending: false })
     : { data: [] };
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { criarContaCliente, atualizarPermissoes, atualizarWhiteLabel, removerConta } from "../app/admin/actions";
+import { criarContaCliente, atualizarPermissoes, atualizarWhiteLabel, removerConta, aprovarConta, recusarConta } from "../app/admin/actions";
 import { TELAS } from "../lib/permissoes";
 
 const ESTADO_INICIAL = { erro: "" };
@@ -12,6 +12,75 @@ function BotaoCriar() {
     <button type="submit" disabled={pending}>
       {pending ? "Criando…" : "Criar acesso"}
     </button>
+  );
+}
+
+function PendenteCard({ conta }) {
+  const [selecao, setSelecao] = useState([]);
+  const [processando, setProcessando] = useState(false);
+
+  function alternarTela(chave) {
+    setSelecao((atual) => (atual.includes(chave) ? atual.filter((c) => c !== chave) : [...atual, chave]));
+  }
+
+  async function aprovar() {
+    setProcessando(true);
+    await aprovarConta(conta.id, selecao);
+    setProcessando(false);
+  }
+
+  async function recusar() {
+    if (!confirm(`Recusar e remover o cadastro de ${conta.email}?`)) return;
+    setProcessando(true);
+    await recusarConta(conta.id);
+  }
+
+  return (
+    <div className="glass-panel" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "12px", borderColor: "var(--border-strong)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <strong>{conta.nome}</strong>
+          <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
+            {conta.email} · {conta.escritorios?.nome}
+          </p>
+        </div>
+        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+          pedido em {new Date(conta.criado_em).toLocaleDateString("pt-BR")}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {TELAS.map((tela) => {
+          const marcado = selecao.includes(tela.chave);
+          return (
+            <button
+              key={tela.chave}
+              type="button"
+              onClick={() => alternarTela(tela.chave)}
+              className="badge"
+              style={{
+                cursor: "pointer",
+                border: "1px solid",
+                borderColor: marcado ? "var(--accent)" : "var(--border)",
+                background: marcado ? "var(--accent-glow)" : "rgba(255,255,255,0.03)",
+                color: marcado ? "var(--accent)" : "var(--text-dim)",
+              }}
+            >
+              {tela.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", gap: "10px" }}>
+        <button type="button" onClick={aprovar} disabled={processando} style={{ padding: "8px 18px", fontSize: "13px" }}>
+          {processando ? "Processando…" : "Aprovar"}
+        </button>
+        <button type="button" className="secundario" onClick={recusar} disabled={processando} style={{ padding: "8px 18px", fontSize: "13px" }}>
+          Recusar
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -105,9 +174,27 @@ function ContaCard({ conta }) {
 
 export default function AdminPainel({ contas }) {
   const [estado, acao] = useFormState(criarContaCliente, ESTADO_INICIAL);
+  const pendentes = contas.filter((c) => c.aprovado === false);
+  const aprovadas = contas.filter((c) => c.aprovado !== false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {pendentes.length > 0 && (
+        <div>
+          <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
+            Solicitações de Acesso ({pendentes.length})
+          </h3>
+          <p style={{ fontSize: "13px", color: "var(--text-dim)", marginBottom: "16px" }}>
+            Cadastro público (/onboarding) - escolha as telas e aprove, ou recuse.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {pendentes.map((conta) => (
+              <PendenteCard key={conta.id} conta={conta} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="glass-panel" style={{ padding: "28px" }}>
         <h3 className="titulo-secao" style={{ marginBottom: "18px" }}>
           Criar acesso de cliente
@@ -166,13 +253,13 @@ export default function AdminPainel({ contas }) {
 
       <div>
         <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
-          Contas ({contas.length})
+          Contas ({aprovadas.length})
         </h3>
-        {contas.length === 0 ? (
-          <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Nenhuma conta criada ainda.</p>
+        {aprovadas.length === 0 ? (
+          <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Nenhuma conta aprovada ainda.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {contas.map((conta) => (
+            {aprovadas.map((conta) => (
               <ContaCard key={conta.id} conta={conta} />
             ))}
           </div>

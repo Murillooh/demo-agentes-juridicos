@@ -8,6 +8,7 @@ const ROTAS_PUBLICAS = ["/", "/onboarding", "/demo"];
 // Renova a sessão do Supabase a cada request e decide o roteamento:
 //   sem sessão + rota protegida         -> "/"
 //   com sessão + admin (Etapa 10)       -> "/admin" em vez de "/dashboard"
+//   com sessão + não aprovado           -> "/aguardando-aprovacao" (cadastro público via /onboarding)
 //   com sessão + precisa trocar senha   -> "/trocar-senha" (única rota liberada)
 //   com sessão + "/" ou "/onboarding"   -> "/dashboard"
 //   com sessão + tela sem permissão     -> primeira tela liberada (Etapa 10)
@@ -73,13 +74,21 @@ export async function middleware(request) {
   }
 
   // Admin não passa pelas checagens de advogado (senha temporária,
-  // permissão por tela) - elas não fazem sentido pra quem não é dono de
-  // escritório nenhum.
-  if (user && !ehAdmin && pathname !== "/trocar-senha") {
+  // aprovação, permissão por tela) - elas não fazem sentido pra quem não é
+  // dono de escritório nenhum.
+  if (user && !ehAdmin && pathname !== "/trocar-senha" && pathname !== "/aguardando-aprovacao") {
     try {
       const { data: advogado } = await comTimeout(
-        supabase.from("advogados").select("precisa_trocar_senha, permissoes").eq("id", user.id).maybeSingle()
+        supabase.from("advogados").select("precisa_trocar_senha, permissoes, aprovado").eq("id", user.id).maybeSingle()
       );
+      // Aprovação vem antes de tudo - cadastro público (/onboarding) nasce
+      // aprovado=false, nem troca de senha nem tela nenhuma libera até o
+      // admin aprovar em /admin.
+      if (advogado && !advogado.aprovado) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/aguardando-aprovacao";
+        return NextResponse.redirect(url);
+      }
       if (advogado?.precisa_trocar_senha) {
         const url = request.nextUrl.clone();
         url.pathname = "/trocar-senha";

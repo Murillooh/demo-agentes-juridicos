@@ -64,7 +64,8 @@ export default function OnboardingForm() {
         </div>
         {resultado.avisoOab && <p className="erro">{resultado.avisoOab}</p>}
         <p style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>
-          No primeiro login, o sistema vai pedir pra trocar essa senha antes de liberar qualquer outra tela.
+          No primeiro login, o sistema pede pra trocar essa senha. Seu acesso também precisa ser aprovado antes de
+          liberar - você vai ver uma tela de espera até isso acontecer.
         </p>
         <Link href="/">
           <button type="button" style={{ width: "100%" }}>

@@ -29,13 +29,16 @@ export default async function AppLayout({ children }) {
 
   const { data: advogado } = await supabase
     .from("advogados")
-    .select("nome, email, precisa_trocar_senha, permissoes, escritorios(nome, cor_sistema)")
+    .select("nome, email, precisa_trocar_senha, permissoes, aprovado, escritorios(nome, cor_sistema)")
     .eq("id", user.id)
     .maybeSingle();
 
   // Mesma lógica do middleware, repetida aqui de propósito: middleware pode
   // ter deixado passar por causa de timeout (fail-open), a página não pode
   // repetir essa folga.
+  if (advogado && !advogado.aprovado) {
+    redirect("/aguardando-aprovacao");
+  }
   if (advogado?.precisa_trocar_senha) {
     redirect("/trocar-senha");
   }

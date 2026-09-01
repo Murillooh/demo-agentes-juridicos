@@ -5,6 +5,7 @@ import { usuarioAdminDaRequisicao } from "../../lib/admin-servidor";
 import { criarClienteSupabaseAdmin } from "../../lib/supabase/admin";
 import { gerarSenhaTemporaria } from "../../lib/senha-temporaria";
 import { TELAS } from "../../lib/permissoes";
+import { enviarEmail } from "../../lib/notificacoes/enviar-email";
 
 const CHAVES_VALIDAS = TELAS.map((t) => t.chave);
 
@@ -98,6 +99,49 @@ export async function atualizarWhiteLabel(escritorioId, logoUrl, corSistema) {
   if (!supabaseAdmin) return { erro: "Não configurado." };
 
   await supabaseAdmin.from("escritorios").update({ logo_url: logoUrl || null, cor_sistema: corSistema }).eq("id", escritorioId);
+  revalidatePath("/admin");
+  return { sucesso: true };
+}
+
+// Fila de "Solicitações de Acesso" (cadastro público via /onboarding,
+// aprovado=false) - admin escolhe as telas e aprova, ou recusa (remove).
+export async function aprovarConta(advogadoId, permissoes) {
+  const admin = await usuarioAdminDaRequisicao();
+  if (!admin) return { erro: "Acesso restrito." };
+
+  const supabaseAdmin = criarClienteSupabaseAdmin();
+  if (!supabaseAdmin) return { erro: "Não configurado." };
+
+  const { data: conta, error } = await supabaseAdmin
+    .from("advogados")
+    .update({ aprovado: true, permissoes: normalizarPermissoes(permissoes) })
+    .eq("id", advogadoId)
+    .select("email, nome")
+    .single();
+  if (error) return { erro: "Não foi possível aprovar." };
+
+  // Best-effort - se o e-mail falhar (Resend não configurado, etc.), a
+  // aprovação já aconteceu de qualquer jeito, não desfaz por causa disso.
+  await enviarEmail({
+    to: conta.email,
+    subject: "Seu acesso foi aprovado",
+    texto: `Olá, ${conta.nome}!\n\nSeu acesso à Plataforma Jurídica foi aprovado. Já pode entrar normalmente com o e-mail e a senha que você cadastrou.`,
+  }).catch(() => {});
+
+  revalidatePath("/admin");
+  return { sucesso: true };
+}
+
+// Recusar = remover a conta (cascade tira o advogado junto) - mesmo
+// comportamento de "Recusar" no sistema anterior.
+export async function recusarConta(advogadoId) {
+  const admin = await usuarioAdminDaRequisicao();
+  if (!admin) return { erro: "Acesso restrito." };
+
+  const supabaseAdmin = criarClienteSupabaseAdmin();
+  if (!supabaseAdmin) return { erro: "Não configurado." };
+
+  await supabaseAdmin.auth.admin.deleteUser(advogadoId);
   revalidatePath("/admin");
   return { sucesso: true };
 }

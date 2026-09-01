@@ -61,6 +61,10 @@ export async function criarEscritorio({ nomeEscritorio, nomeAdvogado, email, oab
     nome: nomeAdv,
     email: emailLimpo,
     precisa_trocar_senha: true,
+    // Cadastro público espera aprovação do admin antes de liberar o
+    // sistema (fila em /admin) - diferente de /demo, que é instantâneo de
+    // propósito.
+    aprovado: false,
   });
   if (erroAdvogado) {
     await supabaseAdmin.auth.admin.deleteUser(advogadoId);
