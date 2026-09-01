@@ -66,6 +66,32 @@ async function gerarPdfContrato() {
   return pdf.save();
 }
 
+// Mesmo conteúdo desenhado no PDF acima, em texto puro - "Analisar de
+// novo" (reanalisarContrato) usa texto_extraido, não reabre o arquivo.
+// Um texto_extraido placeholder (era só "(texto de exemplo...)" antes)
+// fazia a IA sempre devolver "Falha ao analisar" nesse contrato de
+// exemplo - só dava pra ver a análise ORIGINAL gravada no insert abaixo,
+// nunca reanalisar de verdade.
+const TEXTO_CONTRATO_EXEMPLO = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE CONSULTORIA EM TI
+
+CONTRATANTE: TechSul Soluções em TI Ltda, CNPJ 22.333.444/0001-55, com sede em São Paulo/SP.
+CONTRATADA: Vetor Consultoria e Sistemas Ltda, CNPJ 33.444.555/0001-66, com sede em Campinas/SP.
+
+CLÁUSULA 1ª - DO OBJETO
+Prestação de serviços de consultoria em infraestrutura de tecnologia da informação, incluindo diagnóstico, plano de migração para nuvem e suporte técnico especializado.
+
+CLÁUSULA 2ª - DA VIGÊNCIA
+O presente contrato vigora por 12 (doze) meses a partir da assinatura, renovável automaticamente por períodos iguais, salvo manifestação em contrário de qualquer das partes com 30 (trinta) dias de antecedência.
+
+CLÁUSULA 3ª - DO REAJUSTE
+Os valores serão reajustados anualmente conforme índice a ser definido entre as partes.
+
+CLÁUSULA 4ª - DA MULTA E RESCISÃO
+O descumprimento de qualquer cláusula por parte da CONTRATADA sujeita-a a multa de 10% (dez por cento) sobre o valor total do contrato. A rescisão antecipada exige aviso prévio de 30 dias. Não há previsão de multa para atraso no pagamento pela CONTRATANTE.
+
+CLÁUSULA 5ª - DO FORO
+Fica eleito o foro da comarca de Ribeirão Preto/SP para dirimir quaisquer controvérsias.`;
+
 async function main() {
   const resetar = process.env.RESET === "1";
 
@@ -339,7 +365,7 @@ Termos em que pede deferimento.`,
     caminho_armazenamento: caminhoPdf,
     tamanho_bytes: pdfBytes.length,
     status: "concluido",
-    texto_extraido: "(texto de exemplo - contrato gerado pelo script de seed)",
+    texto_extraido: TEXTO_CONTRATO_EXEMPLO,
     partes: [
       { nome: "TechSul Soluções em TI Ltda", papel: "contratante" },
       { nome: "Vetor Consultoria e Sistemas Ltda", papel: "contratada" },
