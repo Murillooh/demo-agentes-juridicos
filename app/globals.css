@@ -796,4 +796,133 @@
       padding: 24px;
     }
   }
+
+  /* Landing page ("/") - classes que só a landing usa, o resto do app usa
+     inline style ou as classes já existentes acima (glass-panel, shell,
+     badge). Trazido de volta do demo-agentes-juridicos (era a tela real do
+     projeto antes do repo virar a plataforma multi-tenant) - cores da
+     landing ficam isoladas via custom properties no wrapper da própria
+     página (--bg/--accent etc. redefinidas só ali), não mudam o resto do
+     sistema (que continua dark+dourado). */
+  .container-wide {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 5%;
+  }
+
+  .section-spacing {
+    padding-top: 120px;
+    padding-bottom: 120px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0f111a;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 24px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 20px -6px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--accent);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-secondary:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+  }
+
+  .premium-input {
+    background: #11141e;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    outline: none;
+  }
+
+  .premium-input:-webkit-autofill,
+  .premium-input:-webkit-autofill:hover,
+  .premium-input:-webkit-autofill:focus,
+  .premium-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #11141e inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  .premium-input:focus {
+    border-color: var(--accent);
+  }
+
+  .campo-senha {
+    position: relative;
+  }
+
+  .botao-olho {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .botao-olho:hover {
+    color: var(--text);
+  }
+
+  .olho-pupila {
+    transition: transform 0.2s ease;
+    transform-origin: center;
+  }
+
+  .olho-risco {
+    transition: stroke-dashoffset 0.25s ease;
+  }
 }
