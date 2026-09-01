@@ -32,7 +32,7 @@ export default function NovoPrazoForm({ peticoes }) {
 
   if (mostrarFallback) {
     return (
-      <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
+      <div className="glass-panel" style={{ padding: "28px" }}>
         <div className="erro" style={{ marginBottom: "20px" }}>
           {estadoIdentificar.aviso}
         </div>
@@ -72,7 +72,7 @@ export default function NovoPrazoForm({ peticoes }) {
   }
 
   return (
-    <div className="glass-panel" style={{ padding: "28px", maxWidth: "640px" }}>
+    <div className="glass-panel" style={{ padding: "28px" }}>
       <form action={acaoIdentificar} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div className="grade-campos grade-campos-2-1">
           <label>
@@ -106,10 +106,6 @@ export default function NovoPrazoForm({ peticoes }) {
         {estadoIdentificar?.erro && <p className="erro">{estadoIdentificar.erro}</p>}
         <BotaoIdentificar />
       </form>
-      <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "16px", lineHeight: 1.5 }}>
-        Cálculo de dias úteis pula só sábado/domingo — não considera feriado nacional, estadual ou
-        forense. Confira a data perto de feriado.
-      </p>
     </div>
   );
 }

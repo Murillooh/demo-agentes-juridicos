@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Scale } from "lucide-react";
 import OnboardingForm from "../../components/OnboardingForm";
 
-// Mesma paleta lima da landing/"/" (CORES_LANDING) - reaplicada aqui pra essa
+// Mesma paleta azul da landing/"/" (CORES_LANDING) - reaplicada aqui pra essa
 // tela não destoar de onde o usuário veio (link "Criar cadastro" do card de
 // login). Como OnboardingForm só usa classes globais (button, input, .badge
 // - todas em var(--accent) etc.), só sobrescrever as custom properties no
@@ -14,10 +14,10 @@ const CORES_LANDING = {
   "--border-strong": "rgba(99, 102, 241, 0.4)",
   "--text": "#F8FAFC",
   "--text-dim": "#94A3B8",
-  "--accent": "#CCFF00",
-  "--accent-rgb": "204 255 0",
-  "--accent-hover": "#B2E600",
-  "--accent-glow": "rgba(204, 255, 0, 0.4)",
+  "--accent": "#3B82F6",
+  "--accent-rgb": "59 130 246",
+  "--accent-hover": "#2563EB",
+  "--accent-glow": "rgba(59, 130, 246, 0.4)",
   "--danger": "#EF4444",
   "--danger-rgb": "239 68 68",
   "--danger-glow": "rgba(239, 68, 68, 0.15)",

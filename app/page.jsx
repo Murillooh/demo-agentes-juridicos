@@ -3,12 +3,36 @@ import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import LoginForm from "../components/LoginForm";
-import { Scale, FileText, Users, ArrowRight, Activity, Shield, Zap, Sparkles, ChevronRight, Gavel, FileCheck, ArrowUp } from "lucide-react";
+import {
+  Scale,
+  FileText,
+  Users,
+  ArrowRight,
+  Activity,
+  Shield,
+  Zap,
+  Sparkles,
+  ChevronRight,
+  Gavel,
+  FileCheck,
+  ArrowUp,
+  Landmark,
+  Target,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
+
+const ESTATISTICAS = [
+  { icone: Landmark, numero: "90+", rotulo: "Tribunais Cobertos" },
+  { icone: Target, numero: "99%", rotulo: "Precisão na Leitura" },
+  { icone: TrendingUp, numero: "10x", rotulo: "Mais Produtividade" },
+  { icone: ShieldCheck, numero: "Zero", rotulo: "Falhas Manuais" },
+];
 
 // Landing trazida de volta do demo-agentes-juridicos (era a tela real do
 // projeto antes do repo virar a plataforma multi-tenant - ficou pra trás no
-// force push, sem querer). Cores próprias (lime sobre "deep space", em vez
-// do dark+dourado do resto do app) isoladas via custom properties no
+// force push, sem querer). Cores próprias (azul sobre "deep space", fundo
+// mais escuro que o dark+azul do resto do app) isoladas via custom properties no
 // wrapper abaixo - só essa página muda de cara, /dashboard e o resto
 // continuam iguais. Rebrandado de "Orbyn Solution" pra "Plataforma
 // Jurídica" (nome real do produto, usado em todo o resto do app - manter o
@@ -21,10 +45,10 @@ const CORES_LANDING = {
   "--border-strong": "rgba(99, 102, 241, 0.4)",
   "--text": "#F8FAFC",
   "--text-dim": "#94A3B8",
-  "--accent": "#CCFF00",
-  "--accent-rgb": "204 255 0",
-  "--accent-hover": "#B2E600",
-  "--accent-glow": "rgba(204, 255, 0, 0.4)",
+  "--accent": "#3B82F6",
+  "--accent-rgb": "59 130 246",
+  "--accent-hover": "#2563EB",
+  "--accent-glow": "rgba(59, 130, 246, 0.4)",
   "--danger": "#EF4444",
   "--danger-rgb": "239 68 68",
   "--danger-glow": "rgba(239, 68, 68, 0.15)",
@@ -43,6 +67,33 @@ export default function Home() {
   }, []);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Reveal ao rolar (fade + sobe) pras seções abaixo do hero, que antes
+  // apareciam todas de uma vez sem animação nenhuma. IntersectionObserver
+  // simples - só liga/desliga uma classe quando o elemento entra na tela,
+  // sem medir posição de scroll nem altura de documento (era isso que
+  // quebrava no ScrollTrigger removido, ver comentário abaixo). unobserve
+  // depois de revelar - não reanima toda vez que rola pra cima e desce nc.
+  // Dependência em showLogin: a seção some do DOM ao entrar no login
+  // (conditional render) - sem reobservar ao voltar, os elementos ficavam
+  // presos em opacity:0 pra sempre (a classe .reveal já nasce invisível).
+  useEffect(() => {
+    if (showLogin) return;
+    const elementos = document.querySelectorAll(".reveal");
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add("revealed");
+            observador.unobserve(entrada.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    elementos.forEach((elemento) => observador.observe(elemento));
+    return () => observador.disconnect();
+  }, [showLogin]);
 
   // Sem ScrollTrigger de propósito - a versão original usava scroll/scrub
   // pesado (parallax do mockup, reveal por seção, contagem dos números)
@@ -255,47 +306,45 @@ export default function Home() {
           </section>
 
           <section className="partner-banner border-y border-white/5 bg-white/[0.02] py-10 relative z-10 overflow-hidden mt-20">
-            <div className="container-wide flex flex-col md:flex-row items-center justify-center gap-12 text-text-dim/60 font-semibold text-sm uppercase tracking-widest">
-              <span className="text-center">Integrado aos Maiores Tribunais</span>
-              <div className="flex gap-12 items-center opacity-70 flex-wrap justify-center">
-                <span className="text-2xl font-bold font-serif tracking-normal">STF</span>
-                <span className="text-2xl font-bold font-serif tracking-normal">STJ</span>
-                <span className="text-2xl font-bold font-serif tracking-normal">TJSP</span>
-                <span className="text-2xl font-bold font-serif tracking-normal">TRT2</span>
-                <span className="text-2xl font-bold font-serif tracking-normal">TRF3</span>
+            <div className="reveal container-wide flex flex-col md:flex-row items-center justify-center gap-8 md:gap-10 text-text-dim/60 font-semibold text-sm uppercase tracking-widest">
+              <span className="text-center shrink-0">Integrado aos Maiores Tribunais</span>
+              <span className="hidden md:block w-px h-8 bg-white/10 shrink-0" aria-hidden="true" />
+              <div className="flex gap-x-10 gap-y-3 items-center flex-wrap justify-center">
+                {["STF", "STJ", "TJSP", "TRT2", "TRF3"].map((sigla) => (
+                  <span key={sigla} className="text-2xl font-bold font-serif tracking-normal text-white/50 hover:text-white/90 transition-colors cursor-default">
+                    {sigla}
+                  </span>
+                ))}
               </div>
             </div>
           </section>
 
+          {/* Números "batem o olho" na tela toda preta que sobrava aqui
+              (nada de textura entre o hero, que termina com gradiente pro
+              --bg sólido, e a próxima seção) - vira card com ícone em vez
+              de número solto flutuando no vazio, mesmo tratamento visual
+              (glow, borda que acende no hover) do bento-grid logo abaixo. */}
           <section className="container-wide py-24 relative z-10 stats-section">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="flex flex-col items-center text-center p-6">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
-                  <span className="stat-number">90</span>+
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[900px] h-[320px] bg-accent/5 rounded-full blur-[140px] opacity-70 pointer-events-none z-0" />
+            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-5">
+              {ESTATISTICAS.map(({ icone: Icone, numero, rotulo }, indice) => (
+                <div
+                  key={rotulo}
+                  className="reveal group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-8 flex flex-col items-center text-center transition-all duration-300 hover:border-accent/40 hover:bg-white/[0.04] hover:-translate-y-1"
+                  style={{ transitionDelay: `${indice * 90}ms` }}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-5 group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                    <Icone size={22} />
+                  </div>
+                  <div className="text-4xl md:text-5xl font-bold text-white mb-2">{numero}</div>
+                  <div className="text-sm font-semibold text-text-dim uppercase tracking-widest">{rotulo}</div>
                 </div>
-                <div className="text-sm font-semibold text-text-dim uppercase tracking-widest">Tribunais Cobertos</div>
-              </div>
-              <div className="flex flex-col items-center text-center p-6">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
-                  <span className="stat-number">99</span>%
-                </div>
-                <div className="text-sm font-semibold text-text-dim uppercase tracking-widest">Precisão na Leitura</div>
-              </div>
-              <div className="flex flex-col items-center text-center p-6">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
-                  <span className="stat-number">10</span>x
-                </div>
-                <div className="text-sm font-semibold text-text-dim uppercase tracking-widest">Mais Produtividade</div>
-              </div>
-              <div className="flex flex-col items-center text-center p-6">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">Zero</div>
-                <div className="text-sm font-semibold text-text-dim uppercase tracking-widest">Falhas Manuais</div>
-              </div>
+              ))}
             </div>
           </section>
 
           <section id="solucao" className="container-wide section-spacing relative z-10">
-            <div className="section-title-wrapper mb-20 text-center max-w-3xl mx-auto">
+            <div className="reveal section-title-wrapper mb-20 text-center max-w-3xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-white">Arquitetura de Alta Performance</h2>
               <p className="text-text-dim text-lg leading-relaxed">
                 Não é apenas um sistema de gestão. É uma máquina de produtividade desenhada para escritórios que não
@@ -304,10 +353,10 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bento-grid">
-              <div className="bento-card group glass-panel lg:col-span-8 min-h-[380px] p-10 flex flex-col justify-between relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.3)] hover:border-accent/50">
+              <div className="reveal bento-card group glass-panel lg:col-span-8 min-h-[380px] p-10 flex flex-col justify-between relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.3)] hover:border-accent/50">
                 <div className="absolute right-0 bottom-0 w-2/3 h-2/3 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none" />
                 <div className="relative z-10 max-w-lg">
-                  <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-8 text-accent shadow-inner group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-500">
+                  <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-8 text-accent shadow-inner group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-500">
                     <Zap size={28} />
                   </div>
                   <h3 className="text-3xl font-bold mb-4 tracking-tight text-white">Busca Processual Autônoma</h3>
@@ -317,29 +366,44 @@ export default function Home() {
                     algo que exige sua ação.
                   </p>
                 </div>
-                <div className="absolute -right-20 top-20 w-80 h-64 bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl rotate-12 group-hover:rotate-6 transition-transform duration-700 hidden md:block">
-                  <div className="flex flex-col gap-4">
-                    <div className="h-8 w-1/3 bg-white/10 rounded" />
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                      <div className="h-4 w-3/4 bg-white/5 rounded" />
+                {/* Card de status real (mesmo visual das hero-float acima)
+                    em vez das barras cinza genéricas que tinham antes - some
+                    de vez no mobile/tablet, onde essa carta rotacionada não
+                    cabe do lado do texto sem sobrepor. */}
+                <div className="absolute -right-16 top-16 w-80 bg-[#0d1424]/95 border border-white/10 rounded-2xl p-5 shadow-2xl rotate-6 group-hover:rotate-2 group-hover:-translate-y-1 transition-all duration-700 hidden lg:block">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0">
+                      <Gavel size={16} />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-white/20" />
-                      <div className="h-4 w-2/3 bg-white/5 rounded" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] text-text-dim font-bold uppercase tracking-wider">Processo 000123-45</div>
+                      <div className="text-sm font-semibold text-white">Andamento novo</div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-white/20" />
-                      <div className="h-4 w-5/6 bg-white/5 rounded" />
+                  </div>
+                  <div className="flex flex-col gap-3 pl-1 border-l border-white/10">
+                    <div className="flex items-center gap-3 pl-4 -ml-px border-l-2 border-accent">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
+                      <span className="text-xs text-white/90">Intimação recebida hoje</span>
+                    </div>
+                    <div className="flex items-center gap-3 pl-4">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                      <span className="text-xs text-text-dim">Prazo identificado: 15 dias</span>
+                    </div>
+                    <div className="flex items-center gap-3 pl-4">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                      <span className="text-xs text-text-dim">Evento criado na agenda</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bento-card group glass-panel lg:col-span-4 min-h-[380px] p-10 flex flex-col relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50">
+              <div
+                className="reveal bento-card group glass-panel lg:col-span-4 min-h-[380px] p-10 flex flex-col relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50"
+                style={{ transitionDelay: "100ms" }}
+              >
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-8 text-emerald-400 shadow-inner group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8 text-emerald-400 shadow-inner group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500">
                     <Shield size={28} />
                   </div>
                   <h3 className="text-2xl font-bold mb-4 tracking-tight text-white">Isolamento por Escritório</h3>
@@ -350,10 +414,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="bento-card group glass-panel lg:col-span-5 min-h-[380px] p-10 flex flex-col justify-between relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(245,158,11,0.2)] hover:border-amber-500/50">
+              <div className="reveal bento-card group glass-panel lg:col-span-5 min-h-[380px] p-10 flex flex-col justify-between relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(245,158,11,0.2)] hover:border-amber-500/50">
                 <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-amber-500/10 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-8 text-amber-500 shadow-inner group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-8 text-amber-500 shadow-inner group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
                     <FileCheck size={28} />
                   </div>
                   <h3 className="text-2xl font-bold mb-4 tracking-tight text-white">Geração de Petições por IA</h3>
@@ -364,10 +428,13 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="bento-card group glass-panel lg:col-span-7 min-h-[380px] p-10 flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.3)] hover:border-accent/50">
+              <div
+                className="reveal bento-card group glass-panel lg:col-span-7 min-h-[380px] p-10 flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.3)] hover:border-accent/50"
+                style={{ transitionDelay: "100ms" }}
+              >
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/10 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 <div className="flex-1 relative z-10 w-full">
-                  <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-6 text-accent shadow-inner group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-6 text-accent shadow-inner group-hover:scale-110 transition-transform duration-500">
                     <Users size={28} />
                   </div>
                   <h3 className="text-3xl font-bold mb-4 tracking-tight text-white">Board e Notificações</h3>
@@ -376,21 +443,43 @@ export default function Home() {
                     e-mail ou WhatsApp pro responsável de cada fase.
                   </p>
                   <button
-                    className="flex items-center gap-2 text-sm font-bold text-accent uppercase tracking-widest hover:text-white transition-colors group-hover:translate-x-2 duration-300"
+                    className="flex items-center gap-2 bg-transparent p-0 text-sm font-bold text-accent uppercase tracking-widest hover:bg-transparent hover:text-white transition-colors group-hover:translate-x-2 duration-300"
                     onClick={() => setShowLogin(true)}
                   >
                     Ver na Prática <ChevronRight size={16} />
                   </button>
+                </div>
+
+                {/* Mini board - card era só texto + link boiando numa
+                    coluna larga, sobrava espaço vazio do lado. Reaproveita
+                    as 3 etapas já citadas no parágrafo em vez de decoração
+                    solta. */}
+                <div className="hidden md:flex flex-col gap-3 bg-[#11192b]/90 border border-white/10 rounded-2xl p-5 shadow-2xl shrink-0 w-60 relative z-10 group-hover:-translate-y-1 transition-transform duration-500">
+                  {[
+                    { label: "Criação", ativo: false },
+                    { label: "Revisão", ativo: true },
+                    { label: "Protocolo", ativo: false },
+                  ].map((etapa) => (
+                    <div key={etapa.label} className="flex items-center gap-3">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${etapa.ativo ? "bg-accent animate-pulse" : "bg-white/20"}`} />
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${etapa.ativo ? "text-white" : "text-text-dim"}`}>
+                        {etapa.label}
+                      </span>
+                      {etapa.ativo && (
+                        <span className="ml-auto text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full shrink-0">2 petições</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </section>
 
           <section className="cta-wrapper container-wide section-spacing pb-12 relative z-10">
-            <div className="cta-section relative overflow-hidden rounded-[32px] p-[1px]">
+            <div className="reveal cta-section relative overflow-hidden rounded-[32px] p-[1px]">
               <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-accent/10 to-bg" />
               <div className="relative glass-panel rounded-[31px] p-16 md:p-28 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] overflow-hidden">
-                <div className="cta-bg-glow absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-accent/30 rounded-full blur-[120px] opacity-100 pointer-events-none" />
+                <div className="cta-bg-glow absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[320px] bg-accent/40 rounded-full blur-[100px] opacity-60 pointer-events-none" />
                 <div className="relative z-10 flex flex-col items-center">
                   <div className="w-16 h-16 bg-accent text-bg rounded-2xl flex items-center justify-center mb-8 shadow-[0_0_40px_var(--accent-glow)]">
                     <Scale size={32} />
@@ -400,15 +489,22 @@ export default function Home() {
                     <br />
                     Eleve o seu escritório.
                   </h2>
-                  <p className="text-xl text-text-dim max-w-2xl mx-auto mb-12 leading-relaxed">
+                  <p className="text-xl text-text-dim max-w-2xl mx-auto mb-4 leading-relaxed">
                     Cadastre seu escritório e comece a usar hoje mesmo.
                   </p>
+                  <p className="text-sm text-text-dim/70 mb-12">Sem cartão de crédito - leva menos de 2 minutos.</p>
                   <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                     <a
                       href="/onboarding"
                       className="bg-white hover:bg-gray-200 text-[#050914] font-bold py-5 px-12 rounded-xl transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 text-lg hover:-translate-y-1 w-full sm:w-auto"
                     >
                       Criar Cadastro Grátis <ArrowRight size={20} />
+                    </a>
+                    <a
+                      href="/demo"
+                      className="bg-transparent border border-white/20 hover:border-white/40 text-white font-bold py-5 px-12 rounded-xl transition-all flex items-center justify-center gap-3 text-lg backdrop-blur-md w-full sm:w-auto"
+                    >
+                      Testar Grátis
                     </a>
                   </div>
                 </div>

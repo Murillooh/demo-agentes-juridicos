@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 :root {
-  /* Dark + dourado - sóbrio, premium, pensado pra transmitir confiança pra
+  /* Dark + azul - sóbrio, premium, pensado pra transmitir confiança pra
      advogado (não é "mais um template SaaS colorido"). */
   --bg: #0b1220;
   --panel: #121b2e;
   --panel-2: #17223a;
   --sidebar: #0a0f1c;
   --border: #24314c;
-  --border-strong: rgba(201, 162, 75, 0.3);
+  --border-strong: rgba(59, 130, 246, 0.3);
 
   --text: #e8edf5;
   --text-dim: #93a2bd;
 
-  --accent: #c9a24b;
-  --accent-rgb: 201 162 75;
-  --accent-hover: #b38f3f;
-  --accent-glow: rgba(201, 162, 75, 0.15);
+  --accent: #3b82f6;
+  --accent-rgb: 59 130 246;
+  --accent-hover: #2563eb;
+  --accent-glow: rgba(59, 130, 246, 0.15);
 
   --danger: #e2574c;
   --danger-rgb: 226 87 76;
@@ -43,6 +43,12 @@
     font-family: var(--font-sans);
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    /* Sem tema claro no site inteiro - com isso o navegador desenha os
+       controles que ele mesmo renderiza (ícone/calendário do input
+       type="date", checkbox marcado, scrollbar) já no tom escuro em vez do
+       branco padrão do SO, que destoava (ver input[type="date"] abaixo). */
+    color-scheme: dark;
+    accent-color: var(--accent);
   }
 
   h1,
@@ -161,9 +167,85 @@
     border-color: var(--accent);
   }
 
+  /* Chrome/Edge/Firefox respeitam essas duas regras pro painel da lista
+     aberta (Safari não - cai pro nativo, sem quebrar nada) - sem isso a
+     lista abre branca do jeito que o SO manda, destoando do resto escuro. */
+  select option,
+  select optgroup {
+    background: #0e1526;
+    color: var(--text);
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--text-dim);
+  }
+
+  /* Dropdown custom (GerarPeticaoForm) - lista feita de divs em vez de
+     <select> nativo, pro tema escuro não depender do SO acertar a cor das
+     opções (ver comentário acima em "select option, select optgroup"). */
+  .seletor-peticao-base-gatilho {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    text-align: left;
+    font-weight: 400;
+    padding: 11px 14px;
+  }
+
+  .seletor-peticao-base-placeholder {
+    color: var(--text-dim);
+  }
+
+  .seletor-peticao-base-lista {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    padding: 6px;
+  }
+
+  .seletor-peticao-base-grupo {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    padding: 8px 10px 4px;
+  }
+
+  .seletor-peticao-base-opcao {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    text-align: left;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 400;
+    padding: 9px 10px;
+    border-radius: 6px;
+  }
+
+  .seletor-peticao-base-opcao:hover {
+    background: var(--accent-glow);
+  }
+
+  .seletor-peticao-base-opcao[aria-selected="true"] {
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 600;
   }
 
   input:disabled {
@@ -193,7 +275,7 @@
 
   button {
     background: var(--accent);
-    color: #241b06;
+    color: #fff;
     border: none;
     border-radius: 8px;
     padding: 11px 20px;
@@ -694,6 +776,20 @@
     margin-bottom: 28px;
   }
 
+  /* Dashboard - "Próximos prazos" / "Suas OABs" / "Atalhos rápidos" lado a
+     lado. auto-fit em vez de 3 colunas fixas: sobra 1 painel por linha
+     sozinho em telas estreitas em vez de espremer 3 colunas finas. */
+  .painel-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+
+  .painel-grade a:hover {
+    border-color: var(--accent) !important;
+  }
+
   .resumo-card {
     padding: 20px 22px;
   }
@@ -767,24 +863,56 @@
   .cliente-card {
     text-align: left;
     cursor: pointer;
-    /* Card é um <button> (clicável) - reseta o "color: #241b06" que a regra
-       global de button (pensada pro botão dourado normal) deixaria vazar
-       pros filhos, já que .glass-panel só reseta background/border. */
+    /* Card é um <button> (clicável) - reseta o "color: #fff" que a regra
+       global de button (pensada pro botão normal, cor de destaque) deixaria
+       vazar pros filhos, já que .glass-panel só reseta background/border. */
     color: var(--text);
     transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   }
 
   .cliente-card:hover {
     /* "button:hover { background: var(--accent-hover) }" (regra global, pro
-       botão dourado normal) tem mais especificidade que ".glass-panel" no
-       hover (pseudo-classe soma peso de classe) - sem isso o card inteiro
-       ficava mostarda. Reseta o background e usa azul claro só como
-       destaque de hover (não é a cor de marca - dourado continua sendo
-       usada em "Online agora", nos chips etc.). */
+       botão normal) tem mais especificidade que ".glass-panel" no hover
+       (pseudo-classe soma peso de classe) - sem isso o card inteiro ficava
+       da cor de destaque sólida. Reseta o background e usa um azul mais
+       claro/dessaturado só como destaque de hover (tom distinto do
+       azul de marca usado em "Online agora", nos chips etc.). */
     background: var(--panel-2);
     border-color: #6fb3e0;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 0 0 1px rgba(111, 179, 224, 0.15);
     transform: translateY(-2px);
+  }
+
+  /* Lista de Contratos - linha era .glass-panel puro sem hover nenhum,
+     card único perdido numa tela enorme e vazia. */
+  .contrato-row {
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .contrato-row:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .contrato-icone {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .contrato-row:hover .contrato-icone {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-color: var(--border-strong);
   }
 
   .sidebar-perfil-info span {
@@ -863,12 +991,32 @@
      projeto antes do repo virar a plataforma multi-tenant) - cores da
      landing ficam isoladas via custom properties no wrapper da própria
      página (--bg/--accent etc. redefinidas só ali), não mudam o resto do
-     sistema (que continua dark+dourado). */
+     sistema (que continua dark+azul). */
   .container-wide {
-    max-width: 1400px;
+    /* 1400px sobrava vazio nas laterais em monitor grande, dava sensação
+       de site "fino"/apertado. */
+    max-width: 1640px;
     width: 100%;
     margin: 0 auto;
     padding: 0 5%;
+  }
+
+  /* Reveal ao rolar (landing "/") - IntersectionObserver simples, sem
+     scroll-scrub/pin nenhum (ver app/page.jsx: useEffect com
+     IntersectionObserver, guardado por showLogin). Diferente do
+     ScrollTrigger removido antes (commits "remove ScrollTrigger"/"remove
+     Lenis") - aquele calculava posição de scroll a partir da altura do
+     documento (quebrava com StrictMode rodando 2x/fonte ainda carregando);
+     esse só olha "o elemento entrou na tela?", 1x, sem recalcular nada. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .section-spacing {

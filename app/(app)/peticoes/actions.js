@@ -15,6 +15,7 @@ export async function gerarPeticao(_estadoAnterior, formData) {
   const areaDireito = String(formData.get("areaDireito") || "").trim();
   const titulo = String(formData.get("titulo") || "").trim();
   const descricaoCaso = String(formData.get("descricaoCaso") || "").trim();
+  const peticaoBaseId = String(formData.get("peticaoBaseId") || "").trim();
 
   if (!AREAS_DIREITO.includes(areaDireito)) return { erro: "Selecione uma área do direito válida." };
   if (!titulo) return { erro: "Dê um título pra essa petição." };
@@ -33,23 +34,32 @@ export async function gerarPeticao(_estadoAnterior, formData) {
     .maybeSingle();
   if (!advogado) return { erro: "Perfil não encontrado." };
 
-  const { data: exemplos, error: erroExemplos } = await supabase
-    .from("peticoes_base")
-    .select("titulo, conteudo")
-    .eq("escritorio_id", advogado.escritorio_id)
-    .eq("area_direito", areaDireito)
-    .order("criado_em", { ascending: false })
-    .limit(MAX_EXEMPLOS_ESTILO);
+  // Sem petição-base escolhida à mão, pega uma amostra automática da área -
+  // com uma escolhida, usa só essa (é uma escolha explícita do advogado,
+  // não faz sentido diluir com outras).
+  const consultaExemplos = peticaoBaseId
+    ? supabase.from("peticoes_base").select("titulo, conteudo").eq("escritorio_id", advogado.escritorio_id).eq("id", peticaoBaseId)
+    : supabase
+        .from("peticoes_base")
+        .select("titulo, conteudo")
+        .eq("escritorio_id", advogado.escritorio_id)
+        .eq("area_direito", areaDireito)
+        .order("criado_em", { ascending: false })
+        .limit(MAX_EXEMPLOS_ESTILO);
+
+  const { data: exemplos, error: erroExemplos } = await consultaExemplos;
 
   if (erroExemplos) return { erro: "Não foi possível carregar as petições-base. Tente novamente." };
 
   // Mensagem clara, não um erro genérico - critério de qualidade explícito
   // da Etapa 2 ("área ainda sem petição-base cadastrada").
   if (!exemplos || exemplos.length === 0) {
-    return {
-      erro: `Ainda não existe petição-base cadastrada pra "${areaDireito}" nesse escritório. Cadastre pelo menos uma em Petições-base antes de gerar.`,
-      semReferencia: true,
-    };
+    return peticaoBaseId
+      ? { erro: "A petição-base escolhida não foi encontrada. Selecione outra." }
+      : {
+          erro: `Ainda não existe petição-base cadastrada pra "${areaDireito}" nesse escritório. Cadastre pelo menos uma em Petições-base antes de gerar.`,
+          semReferencia: true,
+        };
   }
 
   const anthropic = criarClienteAnthropic();
