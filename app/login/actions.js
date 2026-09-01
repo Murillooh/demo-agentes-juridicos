@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { criarClienteSupabaseServidor } from "../../lib/supabase/server";
-import { souAdmin } from "../../lib/admin";
+import { souAdmin, COOKIE_SESSAO_ADMIN_ORIGINAL } from "../../lib/admin";
+import { cookies } from "next/headers";
 
 function traduzirErro(mensagem) {
   const mapa = {
@@ -29,11 +30,13 @@ export async function entrar(_estadoAnterior, formData) {
     return { erro: traduzirErro(error.message) };
   }
 
-  // Admin não tem linha em "advogados" - /dashboard quebra pra ele. Mesma
-  // regra do middleware (rotaPublica + user), só que aqui porque essa
-  // Server Action redireciona direto, sem passar pelo "/" onde o
-  // middleware faria essa escolha sozinho.
-  redirect(souAdmin(email) ? "/admin" : "/dashboard");
+  // Admin entra direto como a conta de visualização (mesma troca de "Ver
+  // como advogado", automática) - /admin/entrar faz a troca e manda pro
+  // /dashboard; volta pro painel de verdade só pelo botão em
+  // Configurações. Mesma regra do middleware (rotaPublica + user), só que
+  // aqui porque essa Server Action redireciona direto, sem passar pelo "/"
+  // onde o middleware faria essa escolha sozinho.
+  redirect(souAdmin(email) ? "/admin/entrar" : "/dashboard");
 }
 
 export async function sair() {
@@ -41,5 +44,10 @@ export async function sair() {
   if (supabase) {
     await supabase.auth.signOut();
   }
+  // Sessão de admin guardada (se saiu sem passar pelo botão "Painel do
+  // administrador") não serve pra mais nada depois de um logout de
+  // verdade - próxima vez que logar como admin, entrarComoAdvogado guarda
+  // uma nova.
+  cookies().delete(COOKIE_SESSAO_ADMIN_ORIGINAL);
   redirect("/");
 }

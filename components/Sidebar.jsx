@@ -41,13 +41,16 @@ export default function Sidebar({ nome, email, nomeEscritorio, permissoes, ehPre
         {ehPreviewAdmin ? (
           // Sem isso essa conta fixa de visualização (lib/admin.js) fica
           // idêntica a estar logado como um advogado de verdade - fácil de
-          // esquecer que é só um teste. Não tem "voltar" automático (a
-          // action não guarda a senha do admin) - só avisa como sair.
+          // esquecer que é só um teste. Volta pro painel de verdade sem
+          // pedir senha de novo via o botão em Configurações
+          // (BotaoVoltarAdmin, usa a sessão guardada por entrarComoAdvogado).
           <div style={{ background: "var(--accent-glow)", border: "1px solid var(--border-strong)", borderRadius: "8px", padding: "10px 12px", marginBottom: "10px" }}>
             <span className="badge" style={{ marginBottom: "4px" }}>
               Modo visualização
             </span>
-            <p style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.4 }}>Pra voltar, saia e entre com seu login de admin.</p>
+            <p style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.4 }}>
+              Pra voltar, vá em Configurações → Painel do administrador.
+            </p>
           </div>
         ) : (
           <span className="badge">{nomeEscritorio}</span>

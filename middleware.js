@@ -7,7 +7,7 @@ const ROTAS_PUBLICAS = ["/", "/onboarding", "/demo"];
 
 // Renova a sessão do Supabase a cada request e decide o roteamento:
 //   sem sessão + rota protegida         -> "/"
-//   com sessão + admin (Etapa 10)       -> "/admin" em vez de "/dashboard"
+//   com sessão + admin                  -> "/admin/entrar" (vira advogado de visualização, cai no /dashboard - "/admin" de verdade fica atrás do botão em Configurações)
 //   com sessão + não aprovado           -> "/aguardando-aprovacao" (cadastro público via /onboarding)
 //   com sessão + precisa trocar senha   -> "/trocar-senha" (única rota liberada)
 //   com sessão + "/" ou "/onboarding"   -> "/dashboard"
@@ -67,9 +67,10 @@ export async function middleware(request) {
 
   if (rotaPublica && user) {
     const url = request.nextUrl.clone();
-    // Admin não tem linha em "advogados" (não é dono de escritório) -
-    // /dashboard quebraria pra ele. Vai direto pro painel.
-    url.pathname = ehAdmin ? "/admin" : "/dashboard";
+    // Admin entra direto como a conta de visualização (mesma troca de "Ver
+    // como advogado", automática) - /admin/entrar faz a troca e manda pro
+    // /dashboard. Painel de verdade fica atrás do botão em Configurações.
+    url.pathname = ehAdmin ? "/admin/entrar" : "/dashboard";
     return NextResponse.redirect(url);
   }
 

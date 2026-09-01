@@ -2,13 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { usuarioAdminDaRequisicao } from "../../lib/admin-servidor";
 import { criarClienteSupabaseAdmin } from "../../lib/supabase/admin";
 import { criarClienteSupabaseServidor } from "../../lib/supabase/server";
 import { gerarSenhaTemporaria } from "../../lib/senha-temporaria";
 import { TELAS } from "../../lib/permissoes";
 import { enviarEmail } from "../../lib/notificacoes/enviar-email";
-import { EMAIL_PREVIEW_ADVOGADO } from "../../lib/admin";
+import { EMAIL_PREVIEW_ADVOGADO, COOKIE_SESSAO_ADMIN_ORIGINAL } from "../../lib/admin";
 
 const CHAVES_VALIDAS = TELAS.map((t) => t.chave);
 
@@ -220,10 +221,18 @@ export async function removerConta(advogadoId) {
 // nenhum: gera uma nova a cada clique via service role e faz login com ela
 // na hora, no mesmo cliente Supabase preso à requisição (mesmo client que
 // entrar() usa) - é o que troca o cookie de sessão de admin pro advogado
-// de visualização. Não tem como "voltar" automático (não é impersonação
-// de verdade, não guardamos a senha do admin) - Sidebar mostra um aviso
-// pra sair e entrar de novo com o login de admin.
+// de visualização. Antes de trocar, guarda o access/refresh token da
+// sessão de admin ATUAL num cookie httpOnly separado (COOKIE_SESSAO_ADMIN_
+// ORIGINAL) - "voltarParaAdmin" usa isso pra restaurar a sessão sem pedir
+// senha de novo. Chamada automaticamente ao logar como admin (ver
+// app/admin/entrar/page.jsx e o redirect de app/login/actions.js) - entrar
+// direto no /dashboard como advogado é o padrão agora; /admin fica atrás
+// do botão "Painel do administrador" em Configurações.
 export async function entrarComoAdvogado() {
+  // Se cair aqui com "Acesso restrito", olha o log de
+  // "[usuarioAdminDaRequisicao] negado" no terminal (dev) ou nos logs da
+  // function (Vercel) - mostra se foi sessão não reconhecida ou e-mail
+  // fora da allowlist.
   const admin = await usuarioAdminDaRequisicao();
   if (!admin) return { erro: "Acesso restrito ao administrador." };
 
@@ -233,6 +242,23 @@ export async function entrarComoAdvogado() {
   const { data: escritorioDemo } = await supabaseAdmin.from("escritorios").select("id").eq("is_demo", true).maybeSingle();
   if (!escritorioDemo) {
     return { erro: "Escritório de demonstração ainda não existe (rode scripts/seed-demo.js)." };
+  }
+
+  // Guarda a sessão de admin ANTES de trocar - senão "voltarParaAdmin"
+  // não tem pra onde voltar. Se por algum motivo não tiver sessão/token
+  // aqui (não deveria acontecer, usuarioAdminDaRequisicao já confirmou
+  // login), segue sem guardar - "voltarParaAdmin" só vai pedir pra
+  // sair e entrar de novo, mesmo comportamento de antes.
+  const supabaseAtual = criarClienteSupabaseServidor();
+  const {
+    data: { session: sessaoAdmin },
+  } = await supabaseAtual.auth.getSession();
+  if (sessaoAdmin) {
+    cookies().set(
+      COOKIE_SESSAO_ADMIN_ORIGINAL,
+      JSON.stringify({ access_token: sessaoAdmin.access_token, refresh_token: sessaoAdmin.refresh_token }),
+      { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 8 }
+    );
   }
 
   const senha = gerarSenhaTemporaria();
@@ -267,9 +293,38 @@ export async function entrarComoAdvogado() {
     }
   }
 
-  const supabase = criarClienteSupabaseServidor();
-  const { error: erroLogin } = await supabase.auth.signInWithPassword({ email: EMAIL_PREVIEW_ADVOGADO, password: senha });
+  const { error: erroLogin } = await supabaseAtual.auth.signInWithPassword({ email: EMAIL_PREVIEW_ADVOGADO, password: senha });
   if (erroLogin) return { erro: "Não foi possível entrar na visualização." };
 
   redirect("/dashboard");
+}
+
+// Botão "Painel do administrador" em Configurações (só aparece pra quem
+// está logado como a conta de visualização - ver souPreviewAdmin). Restaura
+// a sessão de admin guardada em COOKIE_SESSAO_ADMIN_ORIGINAL por
+// entrarComoAdvogado, sem pedir senha de novo. Se o cookie não existir ou
+// tiver expirado (ex.: sessão de visualização aberta há mais de 8h), pede
+// pra sair e entrar de novo com o login de admin - mesmo aviso que existia
+// antes de "voltar" existir.
+export async function voltarParaAdmin() {
+  const cookieStore = cookies();
+  const bruto = cookieStore.get(COOKIE_SESSAO_ADMIN_ORIGINAL)?.value;
+  if (!bruto) return { erro: "Sessão de admin expirou. Saia e entre de novo com seu login de admin." };
+
+  let sessaoSalva;
+  try {
+    sessaoSalva = JSON.parse(bruto);
+  } catch {
+    return { erro: "Sessão de admin inválida. Saia e entre de novo com seu login de admin." };
+  }
+
+  const supabase = criarClienteSupabaseServidor();
+  const { error } = await supabase.auth.setSession({
+    access_token: sessaoSalva.access_token,
+    refresh_token: sessaoSalva.refresh_token,
+  });
+  if (error) return { erro: "Não foi possível voltar - sessão expirou. Saia e entre de novo com seu login de admin." };
+
+  cookieStore.delete(COOKIE_SESSAO_ADMIN_ORIGINAL);
+  redirect("/admin");
 }
