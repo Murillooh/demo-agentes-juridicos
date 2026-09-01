@@ -12,7 +12,7 @@ function BotaoEnviar({ children }) {
     <button
       type="submit"
       disabled={pending}
-      className="bg-accent hover:bg-accent/90 text-bg font-bold py-3.5 px-8 rounded-xl transition-all hover:shadow-[0_0_20px_var(--accent-glow)] w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+      className="bg-accent hover:bg-accent-hover text-bg font-bold py-3.5 px-8 rounded-xl transition-all hover:shadow-[0_0_20px_var(--accent-glow)] hover:-translate-y-0.5 w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? (
         <span className="flex items-center gap-2">

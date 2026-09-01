@@ -109,5 +109,8 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+  // Exclui também arquivos estáticos de public/ (ex: mockup.jpg da landing)
+  // - sem isso, um <img src="/mockup.jpg"> sem sessão caía no redirect pra
+  // "/" (rota protegida por padrão) e a imagem nunca carregava.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpe?g|gif|webp|ico|css|js|map|woff2?|ttf)$).*)"],
 };

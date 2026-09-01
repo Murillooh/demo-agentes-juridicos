@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { marcarTourVisto } from "../app/(app)/dashboard/actions";
 
 const ITENS = [
   { marca: "B", titulo: "Board", texto: "Acompanhe petições passando por Criação, Revisão e Protocolo - arraste os cartões entre as colunas." },
@@ -11,17 +10,17 @@ const ITENS = [
 ];
 
 // Mostrado 1x no /dashboard enquanto advogados.tour_visto for false
-// (Etapa 9 - "tela inicial explicativa no primeiro login").
-export default function TourBoasVindas() {
-  const [aberto, setAberto] = useState(true);
+// (Etapa 9 - "tela inicial explicativa no primeiro login"); depois disso
+// só reaparece se o advogado clicar em "Ver tour novamente" (ver
+// BotaoVerTour). Controlado pelo pai: quem decide se está aberto e o que
+// acontece ao fechar é o `aoFechar`.
+export default function TourBoasVindas({ aoFechar }) {
   const [fechando, setFechando] = useState(false);
-
-  if (!aberto) return null;
 
   async function fechar() {
     setFechando(true);
-    await marcarTourVisto();
-    setAberto(false);
+    await aoFechar();
+    setFechando(false);
   }
 
   return (

@@ -16,12 +16,17 @@ module.exports = {
           dim: "var(--text-dim)",
         },
         accent: {
-          DEFAULT: "var(--accent)",
+          // rgb(var(--accent-rgb) / <alpha-value>) em vez de var(--accent)
+          // puro - permite usar bg-accent/20, border-accent/50 etc. Sem os
+          // canais RGB separados, o Tailwind não sabe aplicar opacidade
+          // numa cor CSS-var e a classe some sem erro nenhum (foi o que
+          // deixou o glow atrás do título da landing invisível).
+          DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
           hover: "var(--accent-hover)",
           glow: "var(--accent-glow)",
         },
         danger: {
-          DEFAULT: "var(--danger)",
+          DEFAULT: "rgb(var(--danger-rgb) / <alpha-value>)",
           glow: "var(--danger-glow)",
         },
       },

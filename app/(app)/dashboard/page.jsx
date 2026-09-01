@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
-import TourBoasVindas from "../../../components/TourBoasVindas";
+import BotaoVerTour from "../../../components/BotaoVerTour";
 
 function ResumoCard({ numero, rotulo, href }) {
   return (
@@ -40,10 +40,13 @@ export default async function DashboardPage() {
 
   return (
     <>
-      {!advogado?.tour_visto && <TourBoasVindas />}
-
-      <h1 className="titulo-pagina">Olá, {advogado?.nome || "advogado"}</h1>
-      <p className="subtitulo-pagina">{advogado?.escritorios?.nome}</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+        <div>
+          <h1 className="titulo-pagina">Olá, {advogado?.nome || "advogado"}</h1>
+          <p className="subtitulo-pagina">{advogado?.escritorios?.nome}</p>
+        </div>
+        <BotaoVerTour tourVisto={!!advogado?.tour_visto} advogadoId={user.id} />
+      </div>
 
       <div className="resumo-grade">
         <ResumoCard numero={peticoesAndamento || 0} rotulo="Petições em andamento" href="/board" />
