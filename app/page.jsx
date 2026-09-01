@@ -22,9 +22,11 @@ const CORES_LANDING = {
   "--text": "#F8FAFC",
   "--text-dim": "#94A3B8",
   "--accent": "#CCFF00",
+  "--accent-rgb": "204 255 0",
   "--accent-hover": "#B2E600",
   "--accent-glow": "rgba(204, 255, 0, 0.4)",
   "--danger": "#EF4444",
+  "--danger-rgb": "239 68 68",
   "--danger-glow": "rgba(239, 68, 68, 0.15)",
   "--radius": "16px",
 };
@@ -58,12 +60,6 @@ export default function Home() {
       gsap.from(".hero-desc", { y: 20, opacity: 0, duration: 1, ease: "power3.out", delay: 0.4 });
       gsap.from(".hero-btn", { y: 20, opacity: 0, duration: 1, ease: "power3.out", delay: 0.6 });
 
-      gsap.fromTo(
-        ".hero-mockup-main",
-        { rotationX: 40, y: 150, opacity: 0, scale: 0.8 },
-        { rotationX: 8, y: 0, opacity: 1, scale: 1, duration: 1.8, ease: "power4.out", delay: 0.5 }
-      );
-
       gsap.from(".hero-float-1", { y: 40, x: -30, opacity: 0, duration: 1.5, ease: "elastic.out(1, 0.75)", delay: 1.2 });
       gsap.from(".hero-float-2", { y: -40, x: 30, opacity: 0, duration: 1.5, ease: "elastic.out(1, 0.75)", delay: 1.4 });
     },
@@ -71,7 +67,7 @@ export default function Home() {
   );
 
   return (
-    <main ref={container} className="shell bg-bg relative overflow-hidden" style={CORES_LANDING}>
+    <main ref={container} className="min-h-screen flex flex-col bg-bg relative overflow-hidden" style={CORES_LANDING}>
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 z-0 pointer-events-none mix-blend-overlay"></div>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] z-0 pointer-events-none [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
@@ -95,7 +91,7 @@ export default function Home() {
             </a>
             <button
               onClick={() => setShowLogin(true)}
-              className="text-sm font-bold text-white border border-white/20 hover:bg-white/10 hover:border-white/40 transition-colors px-6 py-2 rounded-full"
+              className="bg-accent hover:bg-accent-hover text-bg font-bold text-sm md:text-base px-7 py-3 rounded-full transition-all hover:shadow-[0_0_20px_var(--accent-glow)] hover:-translate-y-0.5"
             >
               Entrar
             </button>
@@ -104,23 +100,100 @@ export default function Home() {
       </nav>
 
       {showLogin ? (
-        <section className="flex-1 flex items-center justify-center w-full px-[5%] hero-text min-h-[85vh] pt-24">
-          <div className="relative overflow-hidden rounded-[20px] p-[1px] w-full max-w-[480px]">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-white/10 opacity-60" />
-            <div className="relative bg-[#0D1424] rounded-[19px] p-8 md:p-12 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col z-10 overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/20 rounded-full blur-[40px] opacity-100 z-0 pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/10 rounded-full blur-[40px] opacity-100 z-0 pointer-events-none" />
-              <div className="relative z-10">
-                <h2 className="text-3xl font-semibold text-white tracking-tight mb-2 text-center">Entrar</h2>
-                <p className="text-sm text-text-dim text-center mb-10">Acesse com o e-mail e senha do seu escritório.</p>
-                <LoginForm />
+        <section className="flex-1 w-full min-h-screen grid lg:grid-cols-2 relative">
+          {/* Coluna esquerda - showcase/branding, some em telas pequenas pra
+              não empurrar o form pra baixo do fold no mobile. Reaproveita o
+              mesmo mockup/gradiente do hero pra manter a mesma identidade
+              visual, só que agora ocupando a tela toda em vez de um card
+              solto no meio do vazio. */}
+          <div className="hidden lg:flex flex-col justify-center relative overflow-hidden border-r border-white/5 px-16 xl:px-24 py-24">
+            <div className="absolute inset-0 z-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/mockup.jpg"
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover object-[50%_78%] scale-110 opacity-[0.18] blur-[3px]"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--bg)_0%,transparent_55%,var(--bg)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--bg)_0%,transparent_30%,transparent_70%,var(--bg)_100%)]" />
+            </div>
+            <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[140px] opacity-70 pointer-events-none z-0" />
+
+            <div className="relative z-10 max-w-lg">
+              <div className="w-14 h-14 bg-accent text-bg rounded-2xl flex items-center justify-center mb-8 shadow-[0_0_30px_var(--accent-glow)]">
+                <Scale size={26} />
               </div>
+              <h2 className="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.1] mb-6">
+                O futuro da advocacia já chegou.
+              </h2>
+              <p className="text-lg text-text-dim leading-relaxed mb-12">
+                Petições geradas por IA, acompanhamento processual autônomo e isolamento total dos dados do seu
+                escritório - tudo num único lugar.
+              </p>
+
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-accent shrink-0">
+                    <Zap size={18} />
+                  </div>
+                  <span className="text-sm text-text-dim">Busca processual automática no DataJud/CNJ</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Shield size={18} />
+                  </div>
+                  <span className="text-sm text-text-dim">Dados isolados por escritório, garantido no banco</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-amber-500 shrink-0">
+                    <FileCheck size={18} />
+                  </div>
+                  <span className="text-sm text-text-dim">Minutas de petição no estilo do seu escritório</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna direita - formulário, centralizado e ocupando a altura
+              inteira da viewport em vez do card pequeno perdido no meio de
+              área escura vazia que tinha antes. */}
+          <div className="flex flex-col items-center justify-center px-[5%] py-24 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[600px] h-[500px] bg-accent/10 rounded-full blur-[140px] opacity-60 pointer-events-none z-0 lg:hidden" />
+
+            <div className="relative w-full max-w-[420px] z-10">
+              <div className="lg:hidden w-14 h-14 bg-accent text-bg rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_var(--accent-glow)]">
+                <Scale size={26} />
+              </div>
+              <h2 className="text-3xl font-semibold text-white tracking-tight mb-2 text-center lg:text-left">Entrar</h2>
+              <p className="text-sm text-text-dim text-center lg:text-left mb-10">
+                Acesse com o e-mail e senha do seu escritório.
+              </p>
+              <LoginForm />
             </div>
           </div>
         </section>
       ) : (
         <>
-          <section className="hero-section flex-1 flex flex-col items-center container-wide text-center pt-32 pb-12 relative z-10 min-h-screen">
+          <section className="hero-section flex-1 flex flex-col items-center container-wide text-center pt-32 pb-12 relative z-10 min-h-screen overflow-hidden">
+            {/* Mockup do produto como pano de fundo, atrás do título - bem
+                escurecido/desfocado de propósito: além de dar textura visual
+                sem competir com o texto, esconde a marca antiga ("ORBYN")
+                que ficou gravada nos pixels do jpg (não dá pra editar isso
+                sem gerar um asset novo). object-[50%_78%] joga a metade de
+                cima da imagem, onde tá o logo grande, pra fora do corte. */}
+            <div className="absolute inset-0 z-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/mockup.jpg"
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover object-[50%_78%] scale-110 opacity-[0.22] blur-[3px]"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--bg)_0%,transparent_32%,transparent_68%,var(--bg)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--bg)_0%,transparent_22%,transparent_78%,var(--bg)_100%)]" />
+            </div>
+
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[500px] bg-accent/20 rounded-full blur-[120px] opacity-50 pointer-events-none" />
 
             <div className="relative z-10 flex flex-col items-center w-full">
@@ -128,7 +201,7 @@ export default function Home() {
                 <Sparkles size={14} /> O Próximo Salto da Advocacia
               </div>
 
-              <h1 className="hero-title text-5xl md:text-7xl lg:text-[5rem] leading-[1.05] max-w-[1100px] mb-8 font-bold tracking-tight text-white">
+              <h1 className="hero-title text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05] max-w-[1100px] mb-10 font-bold tracking-tight text-white">
                 O Primeiro Agente Jurídico <br className="hidden md:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-accent to-indigo-400">
                   Autônomo do Brasil
@@ -140,7 +213,7 @@ export default function Home() {
                 centenas de páginas e elabora peças complexas em segundos.
               </p>
 
-              <div className="hero-btn flex flex-col sm:flex-row gap-4 items-center">
+              <div className="hero-btn flex flex-col sm:flex-row gap-4 items-center mb-20">
                 <button
                   className="bg-white hover:bg-gray-100 text-[#050914] font-bold py-4 px-10 rounded-xl transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 text-lg w-full sm:w-auto"
                   onClick={() => setShowLogin(true)}
@@ -155,17 +228,8 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="relative w-full max-w-[1200px] mx-auto mt-24 perspective-[2000px] z-20">
-                <div
-                  className="hero-mockup-main relative rounded-[2rem] border border-white/10 bg-black/40 shadow-2xl overflow-hidden"
-                  style={{ transformStyle: "preserve-3d" }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/mockup.jpg" alt="Plataforma Jurídica" className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
-                  <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
-                </div>
-
-                <div className="absolute -left-16 top-32 bg-[#11192b] border border-white/10 p-5 rounded-2xl shadow-2xl hero-float-1 z-30 flex items-center gap-4 backdrop-blur-xl text-left">
+              <div className="relative w-full max-w-[900px] mx-auto flex flex-col sm:flex-row gap-6 justify-center">
+                <div className="hero-float-1 bg-[#11192b]/90 border border-white/10 p-5 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl text-left">
                   <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0">
                     <Activity size={24} />
                   </div>
@@ -175,7 +239,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="absolute -right-12 top-64 bg-[#11192b] border border-accent/30 p-5 rounded-2xl shadow-[0_0_30px_var(--accent-glow)] hero-float-2 z-30 backdrop-blur-xl max-w-[280px] text-left">
+                <div className="hero-float-2 bg-[#11192b]/90 border border-accent/30 p-5 rounded-2xl shadow-[0_0_30px_var(--accent-glow)] backdrop-blur-xl max-w-[320px] text-left">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-bg shrink-0 mt-1">
                       <Gavel size={20} />
