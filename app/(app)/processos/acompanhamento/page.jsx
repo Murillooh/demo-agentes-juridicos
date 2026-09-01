@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../../lib/supabase/server";
+import { formatarNumeroCnj } from "../../../../lib/cnj";
 import RemoverAcompanhamentoButton from "../../../../components/RemoverAcompanhamentoButton";
 
 export default async function AcompanhamentoPage() {
@@ -34,7 +35,7 @@ export default async function AcompanhamentoPage() {
               style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}
             >
               <div style={{ minWidth: 0 }}>
-                <strong>{p.numero_cnj}</strong>
+                <strong>{formatarNumeroCnj(p.numero_cnj)}</strong>
                 <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>{p.tribunal}</p>
                 <p style={{ fontSize: "13px", marginTop: "6px" }}>{p.situacao_atual || "Aguardando primeira verificação."}</p>
                 {p.ultima_verificacao && (

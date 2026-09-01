@@ -584,6 +584,79 @@
     font-weight: 700;
   }
 
+  /* Busca de Processo - Etapa 10 */
+  .processo-info-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 18px;
+  }
+
+  .processo-info-item label {
+    margin-bottom: 4px;
+  }
+
+  .processo-info-item p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .processo-situacao-badge {
+    display: inline-flex;
+    background: var(--accent-glow);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .andamentos-linha {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 18px;
+  }
+
+  .andamentos-linha::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .andamento-item {
+    position: relative;
+    padding: 4px 0 16px 18px;
+  }
+
+  .andamento-item:last-child {
+    padding-bottom: 0;
+  }
+
+  .andamento-item::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 2px solid var(--accent);
+  }
+
+  .andamento-item:first-child::before {
+    background: var(--accent);
+  }
+
+  .andamento-data {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
   /* Dashboard - cartões de resumo (Etapa 9) */
   .resumo-grade {
     display: grid;

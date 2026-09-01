@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { buscarProcesso, acompanharProcesso } from "../app/(app)/processos/actions";
-import { TRIBUNAIS, detectarTribunal, validarNumeroCnj } from "../lib/cnj";
+import { TRIBUNAIS, detectarTribunal, validarNumeroCnj, formatarNumeroCnj } from "../lib/cnj";
 
 const ESTADO_INICIAL = { erro: "" };
 
@@ -72,11 +72,11 @@ export default function BuscaProcessoForm() {
       </div>
 
       {estado?.processo && (
-        <div className="glass-panel" style={{ padding: "28px", maxWidth: "820px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="glass-panel" style={{ padding: "28px", maxWidth: "820px", display: "flex", flexDirection: "column", gap: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
             <div>
-              <h3 className="titulo-secao" style={{ marginBottom: "6px" }}>
-                {estado.processo.numeroCnj}
+              <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "22px", marginBottom: "6px" }}>
+                {formatarNumeroCnj(estado.processo.numeroCnj)}
               </h3>
               <p style={{ fontSize: "13px", color: "var(--text-dim)" }}>
                 {estado.processo.classe} · {estado.processo.tribunal} · {estado.processo.orgaoJulgador}
@@ -87,26 +87,31 @@ export default function BuscaProcessoForm() {
             </button>
           </div>
 
-          <p>
-            <strong>Assunto:</strong> {estado.processo.assunto}
-          </p>
-          <p>
-            <strong>Distribuído em:</strong> {estado.processo.dataDistribuicao}
-          </p>
-          <p>
-            <strong>Situação atual:</strong> {estado.processo.situacaoAtual}
-          </p>
+          <div className="processo-info-grade">
+            <div className="processo-info-item">
+              <label>Assunto</label>
+              <p>{estado.processo.assunto}</p>
+            </div>
+            <div className="processo-info-item">
+              <label>Distribuído em</label>
+              <p>{estado.processo.dataDistribuicao}</p>
+            </div>
+            <div className="processo-info-item">
+              <label>Situação atual</label>
+              <span className="processo-situacao-badge">{estado.processo.situacaoAtual}</span>
+            </div>
+          </div>
 
           {msgAcompanhar && <p className="info">{msgAcompanhar}</p>}
 
           <div>
-            <h4 style={{ fontSize: "13px", fontWeight: 700, marginBottom: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, marginBottom: "14px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Andamentos recentes
             </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div className="andamentos-linha">
               {estado.processo.andamentos.map((a, i) => (
-                <div key={i} style={{ padding: "10px 12px", background: "var(--panel-2)", borderRadius: "8px", border: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{a.data}</span>
+                <div key={i} className="andamento-item">
+                  <span className="andamento-data">{a.data}</span>
                   <p style={{ marginTop: "2px" }}>{a.descricao}</p>
                 </div>
               ))}
