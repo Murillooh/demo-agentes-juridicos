@@ -43,6 +43,20 @@ export default async function AppLayout({ children }) {
     redirect("/trocar-senha");
   }
 
+  // "Visto por último" pro popup de cliente em /admin (Etapa 11) - sem
+  // await de propósito, não pode atrasar o carregamento da página por causa
+  // de um UPDATE que não é essencial pro usuário atual. RLS já cobre (each
+  // advogado só atualiza a própria linha - policy "atualiza o proprio
+  // registro" em 001_fundacao.sql).
+  if (user) {
+    supabase
+      .from("advogados")
+      .update({ ultimo_acesso: new Date().toISOString() })
+      .eq("id", user.id)
+      .then(() => {})
+      .catch(() => {});
+  }
+
   // White-label (Etapa 10) - cor do escritório sobrescreve --accent/
   // --accent-glow via <style> injetado, mesma ideia do sistema anterior.
   // Default (#c9a24b) não gera override nenhum, então escritório sem cor

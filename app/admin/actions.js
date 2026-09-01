@@ -91,16 +91,64 @@ export async function atualizarPermissoes(advogadoId, permissoes) {
   return { sucesso: true };
 }
 
-export async function atualizarWhiteLabel(escritorioId, logoUrl, corSistema) {
+export async function atualizarInfoCliente(escritorioId, nome, corSistema) {
   const admin = await usuarioAdminDaRequisicao();
   if (!admin) return { erro: "Acesso restrito." };
+  if (!nome?.trim()) return { erro: "Informe o nome do escritório." };
 
   const supabaseAdmin = criarClienteSupabaseAdmin();
   if (!supabaseAdmin) return { erro: "Não configurado." };
 
-  await supabaseAdmin.from("escritorios").update({ logo_url: logoUrl || null, cor_sistema: corSistema }).eq("id", escritorioId);
+  await supabaseAdmin.from("escritorios").update({ nome: nome.trim(), cor_sistema: corSistema }).eq("id", escritorioId);
   revalidatePath("/admin");
   return { sucesso: true };
+}
+
+const TIPOS_LOGO_ACEITOS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/svg+xml": "svg" };
+const TAMANHO_MAXIMO_LOGO = 3 * 1024 * 1024;
+
+// Upload de verdade (em vez de só campo de URL) - bucket público "logos"
+// (migration 013), sempre via service role (mesmo raciocínio do bucket
+// "contratos" em app/(app)/contratos/actions.js: sem policy de INSERT em
+// storage.objects, só o servidor decide quem escreve). upsert:true porque
+// aqui é sempre "trocar a logo atual", não um arquivo novo por vez.
+//
+// escritorioId vem "pré-preenchido" via .bind(null, escritorioId) no
+// componente (ClienteModal) - useFormState sempre chama a action com
+// (estadoAnterior, formData) por conta própria, então esses dois ficam
+// depois do argumento fixado pelo bind.
+export async function uploadLogoCliente(escritorioId, _estadoAnterior, formData) {
+  const admin = await usuarioAdminDaRequisicao();
+  if (!admin) return { erro: "Acesso restrito." };
+
+  const arquivo = formData.get("logo");
+  if (!arquivo || typeof arquivo === "string" || !arquivo.size) return { erro: "Selecione uma imagem." };
+
+  const extensao = TIPOS_LOGO_ACEITOS[arquivo.type];
+  if (!extensao) return { erro: "Formato não suportado - envie PNG, JPG, WEBP ou SVG." };
+  if (arquivo.size > TAMANHO_MAXIMO_LOGO) return { erro: "Imagem muito grande (máximo 3MB)." };
+
+  const supabaseAdmin = criarClienteSupabaseAdmin();
+  if (!supabaseAdmin) return { erro: "Não configurado." };
+
+  const caminho = `${escritorioId}/logo.${extensao}`;
+  const bytes = new Uint8Array(await arquivo.arrayBuffer());
+  const { error: erroUpload } = await supabaseAdmin.storage.from("logos").upload(caminho, bytes, {
+    contentType: arquivo.type,
+    upsert: true,
+  });
+  if (erroUpload) return { erro: "Não foi possível enviar a imagem. Tente novamente." };
+
+  const {
+    data: { publicUrl },
+  } = supabaseAdmin.storage.from("logos").getPublicUrl(caminho);
+  // Cache-bust - mesmo caminho de sempre (upsert), sem isso o navegador
+  // continua mostrando a logo antiga em cache depois de trocar.
+  const logoUrl = `${publicUrl}?v=${Date.now()}`;
+
+  await supabaseAdmin.from("escritorios").update({ logo_url: logoUrl }).eq("id", escritorioId);
+  revalidatePath("/admin");
+  return { sucesso: true, logoUrl };
 }
 
 // Fila de "Solicitações de Acesso" (cadastro público via /onboarding,

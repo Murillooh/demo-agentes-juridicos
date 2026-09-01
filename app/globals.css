@@ -16,10 +16,12 @@
   --text-dim: #93a2bd;
 
   --accent: #c9a24b;
+  --accent-rgb: 201 162 75;
   --accent-hover: #b38f3f;
   --accent-glow: rgba(201, 162, 75, 0.15);
 
   --danger: #e2574c;
+  --danger-rgb: 226 87 76;
   --danger-glow: rgba(226, 87, 76, 0.15);
 
   --radius: 10px;
@@ -107,6 +109,22 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+  }
+
+  .link-ver-tour {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .link-ver-tour:hover {
+    color: var(--text);
+    border-color: var(--accent);
   }
 
   .titulo-secao {
@@ -508,6 +526,10 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .grade-campos-1-1-1 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
   .grade-campos-1-2 {
     grid-template-columns: 1fr 2fr;
   }
@@ -516,8 +538,15 @@
     grid-template-columns: 2fr 1fr;
   }
 
+  @media (max-width: 860px) {
+    .grade-campos-1-1-1 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   @media (max-width: 640px) {
     .grade-campos-1-1,
+    .grade-campos-1-1-1,
     .grade-campos-1-2,
     .grade-campos-2-1 {
       grid-template-columns: 1fr;
@@ -725,6 +754,37 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Admin - cards de cliente (Etapa 11), grid + hover; clique abre o
+     popup de edição (ClienteModal). */
+  .clientes-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  .cliente-card {
+    text-align: left;
+    cursor: pointer;
+    /* Card é um <button> (clicável) - reseta o "color: #241b06" que a regra
+       global de button (pensada pro botão dourado normal) deixaria vazar
+       pros filhos, já que .glass-panel só reseta background/border. */
+    color: var(--text);
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .cliente-card:hover {
+    /* "button:hover { background: var(--accent-hover) }" (regra global, pro
+       botão dourado normal) tem mais especificidade que ".glass-panel" no
+       hover (pseudo-classe soma peso de classe) - sem isso o card inteiro
+       ficava mostarda. Reseta o background e usa azul claro só como
+       destaque de hover (não é a cor de marca - dourado continua sendo
+       usada em "Online agora", nos chips etc.). */
+    background: var(--panel-2);
+    border-color: #6fb3e0;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 0 0 1px rgba(111, 179, 224, 0.15);
+    transform: translateY(-2px);
   }
 
   .sidebar-perfil-info span {

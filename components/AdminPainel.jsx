@@ -1,15 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { criarContaCliente, atualizarPermissoes, atualizarWhiteLabel, removerConta, aprovarConta, recusarConta } from "../app/admin/actions";
+import { criarContaCliente, aprovarConta, recusarConta } from "../app/admin/actions";
 import { TELAS } from "../lib/permissoes";
+import TelaChip from "./TelaChip";
+import ClienteCard from "./ClienteCard";
+import ClienteModal from "./ClienteModal";
 
 const ESTADO_INICIAL = { erro: "" };
 
 function BotaoCriar() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending}>
+    <button type="submit" disabled={pending} style={{ padding: "12px 20px", fontSize: "14px" }}>
       {pending ? "Criando…" : "Criar acesso"}
     </button>
   );
@@ -50,26 +53,9 @@ function PendenteCard({ conta }) {
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-        {TELAS.map((tela) => {
-          const marcado = selecao.includes(tela.chave);
-          return (
-            <button
-              key={tela.chave}
-              type="button"
-              onClick={() => alternarTela(tela.chave)}
-              className="badge"
-              style={{
-                cursor: "pointer",
-                border: "1px solid",
-                borderColor: marcado ? "var(--accent)" : "var(--border)",
-                background: marcado ? "var(--accent-glow)" : "rgba(255,255,255,0.03)",
-                color: marcado ? "var(--accent)" : "var(--text-dim)",
-              }}
-            >
-              {tela.label}
-            </button>
-          );
-        })}
+        {TELAS.map((tela) => (
+          <TelaChip key={tela.chave} label={tela.label} marcado={selecao.includes(tela.chave)} onToggle={() => alternarTela(tela.chave)} />
+        ))}
       </div>
 
       <div style={{ display: "flex", gap: "10px" }}>
@@ -84,98 +70,37 @@ function PendenteCard({ conta }) {
   );
 }
 
-function ContaCard({ conta }) {
-  const [permissoes, setPermissoes] = useState(conta.permissoes); // null = tudo liberado
-  const [logoUrl, setLogoUrl] = useState(conta.escritorios?.logo_url || "");
-  const [corSistema, setCorSistema] = useState(conta.escritorios?.cor_sistema || "#c9a24b");
-  const [salvandoLabel, setSalvandoLabel] = useState(false);
-  const [removendo, setRemovendo] = useState(false);
-
-  async function alternarTela(chave) {
-    const base = permissoes === null ? TELAS.map((t) => t.chave) : permissoes;
-    const novas = base.includes(chave) ? base.filter((c) => c !== chave) : [...base, chave];
-    setPermissoes(novas); // otimista - painel é só do próprio admin, sem concorrência
-    await atualizarPermissoes(conta.id, novas);
-  }
-
-  async function salvarWhiteLabel() {
-    setSalvandoLabel(true);
-    await atualizarWhiteLabel(conta.escritorio_id, logoUrl, corSistema);
-    setSalvandoLabel(false);
-  }
-
-  async function remover() {
-    if (!confirm(`Remover o acesso de ${conta.email}? Essa ação não pode ser desfeita.`)) return;
-    setRemovendo(true);
-    await removerConta(conta.id);
-  }
-
-  return (
-    <div className="glass-panel" style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "14px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <strong>{conta.nome}</strong>
-          <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
-            {conta.email} · {conta.escritorios?.nome}
-          </p>
-        </div>
-        <button type="button" className="secundario" onClick={remover} disabled={removendo} style={{ flexShrink: 0 }}>
-          {removendo ? "Removendo…" : "Remover acesso"}
-        </button>
-      </div>
-
-      <div>
-        <label style={{ marginBottom: "8px" }}>Telas liberadas</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {TELAS.map((tela) => {
-            const marcado = permissoes === null || permissoes.includes(tela.chave);
-            return (
-              <button
-                key={tela.chave}
-                type="button"
-                onClick={() => alternarTela(tela.chave)}
-                className="badge"
-                style={{
-                  cursor: "pointer",
-                  border: "1px solid",
-                  borderColor: marcado ? "var(--accent)" : "var(--border)",
-                  background: marcado ? "var(--accent-glow)" : "rgba(255,255,255,0.03)",
-                  color: marcado ? "var(--accent)" : "var(--text-dim)",
-                }}
-              >
-                {tela.label}
-              </button>
-            );
-          })}
-        </div>
-        {permissoes === null && (
-          <p style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "8px" }}>
-            Sem restrição (acesso liberado em tudo) - clique numa tela pra passar a restringir.
-          </p>
-        )}
-      </div>
-
-      <div className="grade-campos grade-campos-2-1" style={{ alignItems: "end" }}>
-        <label>
-          Logo (URL)
-          <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…/logo.png" />
-        </label>
-        <label>
-          Cor do sistema
-          <input type="color" value={corSistema} onChange={(e) => setCorSistema(e.target.value)} style={{ height: "42px", padding: "4px" }} />
-        </label>
-      </div>
-      <button type="button" className="secundario" onClick={salvarWhiteLabel} disabled={salvandoLabel} style={{ alignSelf: "flex-start" }}>
-        {salvandoLabel ? "Salvando…" : "Salvar logo e cor"}
-      </button>
-    </div>
-  );
-}
-
 export default function AdminPainel({ contas }) {
   const [estado, acao] = useFormState(criarContaCliente, ESTADO_INICIAL);
+  const [permissoesNovas, setPermissoesNovas] = useState([]);
+  const [corNova, setCorNova] = useState("#c9a24b");
+  const [busca, setBusca] = useState("");
+  const [idSelecionado, setIdSelecionado] = useState(null);
+
   const pendentes = contas.filter((c) => c.aprovado === false);
   const aprovadas = contas.filter((c) => c.aprovado !== false);
+  const contaSelecionada = aprovadas.find((c) => c.id === idSelecionado) || null;
+
+  const filtradas = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return aprovadas;
+    return aprovadas.filter((c) =>
+      [c.nome, c.email, c.escritorios?.nome].filter(Boolean).some((campo) => campo.toLowerCase().includes(termo))
+    );
+  }, [aprovadas, busca]);
+
+  function alternarTelaNova(chave) {
+    setPermissoesNovas((atual) => (atual.includes(chave) ? atual.filter((c) => c !== chave) : [...atual, chave]));
+  }
+
+  // Form some após sucesso, mas o estado local do form (chips + cor) fica -
+  // limpa junto pra próxima conta criada não começar com sobra da anterior.
+  useEffect(() => {
+    if (estado?.sucesso) {
+      setPermissoesNovas([]);
+      setCorNova("#c9a24b");
+    }
+  }, [estado?.sucesso]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -195,12 +120,15 @@ export default function AdminPainel({ contas }) {
         </div>
       )}
 
-      <div className="glass-panel" style={{ padding: "28px" }}>
-        <h3 className="titulo-secao" style={{ marginBottom: "18px" }}>
+      <div className="glass-panel" style={{ padding: "32px", borderColor: "var(--border-strong)" }}>
+        <h3 className="titulo-secao" style={{ marginBottom: "4px" }}>
           Criar acesso de cliente
         </h3>
-        <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div className="grade-campos grade-campos-1-1">
+        <p style={{ fontSize: "13px", color: "var(--text-dim)", marginBottom: "22px" }}>
+          Cria o login e gera senha temporária - logo e cor dá pra ajustar depois, no card do cliente.
+        </p>
+        <form action={acao} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          <div className="grade-campos grade-campos-1-1-1">
             <label>
               E-mail do cliente
               <input type="email" name="email" required placeholder="cliente@escritorio.com.br" />
@@ -209,41 +137,66 @@ export default function AdminPainel({ contas }) {
               Nome do responsável
               <input name="nomeAdvogado" required placeholder="Ex.: Dr. João Advocacia" />
             </label>
+            <label>
+              Nome do escritório/cliente
+              <input name="nomeEscritorio" required placeholder="Ex.: João Advocacia" />
+            </label>
           </div>
-          <label>
-            Nome do escritório/cliente
-            <input name="nomeEscritorio" required placeholder="Ex.: João Advocacia" />
-          </label>
-          <div className="grade-campos grade-campos-1-1">
+
+          <div className="grade-campos grade-campos-2-1">
             <label>
               Logo (URL, opcional)
               <input name="logoUrl" placeholder="https://…/logo.png" />
             </label>
             <label>
               Cor do sistema
-              <input type="color" name="corSistema" defaultValue="#c9a24b" style={{ height: "42px", padding: "4px" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <input
+                  type="color"
+                  name="corSistema"
+                  value={corNova}
+                  onChange={(e) => setCorNova(e.target.value)}
+                  style={{ height: "42px", width: "56px", padding: "4px", flexShrink: 0 }}
+                />
+                <span style={{ fontSize: "13px", color: "var(--text-dim)", fontFamily: "monospace" }}>{corNova}</span>
+              </div>
             </label>
           </div>
+
+          {/* Checkbox real fica invisível (display:none não tira do form) -
+              quem o usuário vê e clica é o TelaChip logo abaixo, controlado
+              pelo mesmo estado. */}
+          <div style={{ display: "none" }}>
+            {TELAS.map((tela) => (
+              <input key={tela.chave} type="checkbox" name="permissoes" value={tela.chave} checked={permissoesNovas.includes(tela.chave)} readOnly />
+            ))}
+          </div>
           <div>
-            <label style={{ marginBottom: "8px" }}>Telas liberadas</label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <label style={{ marginBottom: "10px" }}>Telas liberadas</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {TELAS.map((tela) => (
-                <label key={tela.chave} style={{ display: "flex", alignItems: "center", gap: "6px", textTransform: "none", letterSpacing: "normal", fontWeight: 400 }}>
-                  <input type="checkbox" name="permissoes" value={tela.chave} style={{ width: "auto" }} />
-                  {tela.label}
-                </label>
+                <TelaChip key={tela.chave} label={tela.label} marcado={permissoesNovas.includes(tela.chave)} onToggle={() => alternarTelaNova(tela.chave)} />
               ))}
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "8px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "10px" }}>
               Nenhuma tela marcada = cliente entra mas não vê nada além de Configurações.
             </p>
           </div>
+
           {estado?.erro && <p className="erro">{estado.erro}</p>}
-          <BotaoCriar />
+
+          <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "4px", borderTop: "1px solid var(--border)" }}>
+            <div style={{ paddingTop: "18px" }}>
+              <BotaoCriar />
+            </div>
+          </div>
         </form>
 
         {estado?.sucesso && (
-          <div className="info" style={{ background: "var(--accent-glow)", padding: "14px", borderRadius: "8px", marginTop: "18px" }}>
+          <div
+            className="info"
+            style={{ background: "var(--accent-glow)", border: "1px solid var(--border-strong)", padding: "16px", borderRadius: "8px", marginTop: "20px" }}
+          >
             Conta criada — e-mail: <strong>{estado.email}</strong> · senha: <strong style={{ fontFamily: "monospace" }}>{estado.senha}</strong>
             <br />
             Essa senha só aparece aqui uma vez.
@@ -252,19 +205,32 @@ export default function AdminPainel({ contas }) {
       </div>
 
       <div>
-        <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
-          Contas ({aprovadas.length})
-        </h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap", marginBottom: "16px" }}>
+          <h3 className="titulo-secao">Contas ({aprovadas.length})</h3>
+          {aprovadas.length > 0 && (
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por nome, e-mail ou escritório…"
+              style={{ maxWidth: "320px" }}
+            />
+          )}
+        </div>
+
         {aprovadas.length === 0 ? (
           <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Nenhuma conta aprovada ainda.</p>
+        ) : filtradas.length === 0 ? (
+          <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Nenhuma conta bate com "{busca}".</p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {aprovadas.map((conta) => (
-              <ContaCard key={conta.id} conta={conta} />
+          <div className="clientes-grade">
+            {filtradas.map((conta) => (
+              <ClienteCard key={conta.id} conta={conta} onClick={() => setIdSelecionado(conta.id)} />
             ))}
           </div>
         )}
       </div>
+
+      {contaSelecionada && <ClienteModal conta={contaSelecionada} aoFechar={() => setIdSelecionado(null)} />}
     </div>
   );
 }
