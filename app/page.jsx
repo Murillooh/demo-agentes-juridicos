@@ -226,7 +226,7 @@ export default function Home() {
         </section>
       ) : (
         <>
-          <section className="hero-section flex-1 flex flex-col items-center container-wide text-center pt-32 pb-12 relative z-10 min-h-screen overflow-hidden">
+          <section className="hero-section flex-1 flex flex-col items-center justify-center container-wide text-center pt-32 pb-12 relative z-10 min-h-screen overflow-hidden">
             {/* Mockup do produto como pano de fundo, atrás do título - bem
                 escurecido/desfocado de propósito: além de dar textura visual
                 sem competir com o texto, esconde a marca antiga ("ORBYN")
@@ -254,7 +254,7 @@ export default function Home() {
 
               <h1 className="hero-title text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05] max-w-[1100px] mb-10 font-bold tracking-tight text-white">
                 O Primeiro Agente Jurídico <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-accent to-indigo-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-violet-500">
                   Autônomo do Brasil
                 </span>
               </h1>
