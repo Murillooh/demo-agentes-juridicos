@@ -22,7 +22,7 @@ export default async function ConfiguracoesPage() {
     <>
       <h1 className="titulo-pagina">Configurações</h1>
       <p className="subtitulo-pagina">Identidade visual usada nas petições exportadas e canais de notificação.</p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 620px))", gap: "24px", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 620px))", gap: "24px" }}>
         <ConfiguracoesForm nome={advogado?.escritorios?.nome} logoUrl={advogado?.escritorios?.logo_url} />
         <NotificacoesConfigForm
           canalEmail={configNotificacao ? configNotificacao.canal_email : true}
