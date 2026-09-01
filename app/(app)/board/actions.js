@@ -3,7 +3,7 @@
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
 import { criarClienteSupabaseAdmin } from "../../../lib/supabase/admin";
 import { enfileirarNotificacao } from "../../../lib/notificacoes/enfileirar";
-import { enviarPeticaoParaOneDrive } from "../../../lib/onedrive/enviar-peticao";
+import { enviarPeticaoParaGoogleDrive } from "../../../lib/googledrive/enviar-peticao";
 
 const FASES = ["criacao", "revisao", "protocolo"];
 const CAMPO_RESPONSAVEL = { revisao: "responsavel_revisao_id", protocolo: "responsavel_protocolo_id" };
@@ -35,7 +35,7 @@ export async function moverFasePeticao(id, novaFase) {
       // Marca "enviando" já na hora do move (mesmo antes do PDF existir de
       // verdade) - o board/tela de Integrações mostra esse estado
       // imediatamente em vez de nada até o upload terminar.
-      ...(novaFase === "protocolo" ? { onedrive_status: "pendente" } : {}),
+      ...(novaFase === "protocolo" ? { googledrive_status: "pendente" } : {}),
     })
     .eq("id", id);
   if (erroUpdate) return { erro: "Não foi possível mover a petição." };
@@ -93,9 +93,9 @@ export async function moverFasePeticao(id, novaFase) {
   // não depende de quanto tempo essa function ainda leva pra retornar.
   if (novaFase === "protocolo") {
     try {
-      await enviarPeticaoParaOneDrive(id);
+      await enviarPeticaoParaGoogleDrive(id);
     } catch (err) {
-      console.error("[onedrive] falha ao enviar petição", err);
+      console.error("[googledrive] falha ao enviar petição", err);
     }
   }
 

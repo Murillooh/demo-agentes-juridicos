@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { salvarPeticao, finalizarPeticao, salvarNumeroProcesso, salvarNomeCliente } from "../app/(app)/peticoes/actions";
 
-const ROTULO_ONEDRIVE = { enviado: "Enviada ao OneDrive", falha: "Falha ao enviar ao OneDrive", pendente: "Enviando ao OneDrive…" };
+const ROTULO_GOOGLEDRIVE = { enviado: "Enviada ao Google Drive", falha: "Falha ao enviar ao Google Drive", pendente: "Enviando ao Google Drive…" };
 
 export default function PeticaoEditor({ peticao, escritorio }) {
   const [conteudo, setConteudo] = useState(peticao.conteudo);
@@ -132,23 +132,23 @@ export default function PeticaoEditor({ peticao, escritorio }) {
         </div>
       </label>
       <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-10px" }}>
-        Define a pasta onde a petição é salva no OneDrive quando chega em Protocolo no Board.
-        {peticao.onedrive_status && (
+        Define a pasta onde a petição é salva no Google Drive quando chega em Protocolo no Board.
+        {peticao.googledrive_status && (
           <>
             {" "}
-            <strong style={{ color: peticao.onedrive_status === "falha" ? "var(--danger)" : "var(--accent)" }}>
-              {ROTULO_ONEDRIVE[peticao.onedrive_status]}
+            <strong style={{ color: peticao.googledrive_status === "falha" ? "var(--danger)" : "var(--accent)" }}>
+              {ROTULO_GOOGLEDRIVE[peticao.googledrive_status]}
             </strong>
-            {peticao.onedrive_status === "enviado" && peticao.onedrive_link && (
+            {peticao.googledrive_status === "enviado" && peticao.googledrive_link && (
               <>
                 {" "}
                 ·{" "}
-                <a href={peticao.onedrive_link} target="_blank" rel="noopener noreferrer">
-                  abrir no OneDrive
+                <a href={peticao.googledrive_link} target="_blank" rel="noopener noreferrer">
+                  abrir no Google Drive
                 </a>
               </>
             )}
-            {peticao.onedrive_status === "falha" && peticao.onedrive_erro && <> — {peticao.onedrive_erro}</>}
+            {peticao.googledrive_status === "falha" && peticao.googledrive_erro && <> — {peticao.googledrive_erro}</>}
           </>
         )}
       </p>

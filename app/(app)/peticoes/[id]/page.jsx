@@ -8,7 +8,7 @@ export default async function PeticaoPage({ params }) {
 
   const { data: peticao } = await supabase
     .from("peticoes")
-    .select("id, titulo, area_direito, conteudo, status, escritorio_id, numero_processo, nome_cliente, onedrive_status, onedrive_erro, onedrive_link")
+    .select("id, titulo, area_direito, conteudo, status, escritorio_id, numero_processo, nome_cliente, googledrive_status, googledrive_erro, googledrive_link")
     .eq("id", params.id)
     .maybeSingle();
 

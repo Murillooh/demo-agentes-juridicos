@@ -1,6 +1,6 @@
 import { criarClienteSupabaseServidor, obterUsuario } from "../../../lib/supabase/server";
-import DesconectarOneDriveButton from "../../../components/DesconectarOneDriveButton";
-import ReenviarOneDriveButton from "../../../components/ReenviarOneDriveButton";
+import DesconectarGoogleDriveButton from "../../../components/DesconectarGoogleDriveButton";
+import ReenviarGoogleDriveButton from "../../../components/ReenviarGoogleDriveButton";
 
 export default async function IntegracoesPage({ searchParams }) {
   const supabase = criarClienteSupabaseServidor();
@@ -9,16 +9,16 @@ export default async function IntegracoesPage({ searchParams }) {
   const { data: advogado } = await supabase.from("advogados").select("escritorio_id").eq("id", user.id).maybeSingle();
 
   const { data: integracao } = await supabase
-    .from("integracoes_onedrive")
-    .select("email_conta_ms, status, ultima_sincronizacao, ultimo_erro")
+    .from("integracoes_googledrive")
+    .select("email_conta_google, status, ultima_sincronizacao, ultimo_erro")
     .eq("escritorio_id", advogado?.escritorio_id)
     .maybeSingle();
 
   const { data: peticoesComUpload } = await supabase
     .from("peticoes")
-    .select("id, titulo, nome_cliente, onedrive_status, onedrive_erro, onedrive_link, onedrive_atualizado_em")
-    .not("onedrive_status", "is", null)
-    .order("onedrive_atualizado_em", { ascending: false })
+    .select("id, titulo, nome_cliente, googledrive_status, googledrive_erro, googledrive_link, googledrive_atualizado_em")
+    .not("googledrive_status", "is", null)
+    .order("googledrive_atualizado_em", { ascending: false })
     .limit(30);
 
   const conectado = !!integracao;
@@ -28,7 +28,7 @@ export default async function IntegracoesPage({ searchParams }) {
     <>
       <h1 className="titulo-pagina">Integrações</h1>
       <p className="subtitulo-pagina">
-        OneDrive - petições que chegam em Protocolo no Board são salvas automaticamente na pasta do cliente.
+        Google Drive - petições que chegam em Protocolo no Board são salvas automaticamente na pasta do cliente.
       </p>
 
       {searchParams?.erro && (
@@ -38,13 +38,13 @@ export default async function IntegracoesPage({ searchParams }) {
       )}
       {searchParams?.conectado && (
         <p className="info" style={{ marginBottom: "20px" }}>
-          Conectado ao OneDrive com sucesso.
+          Conectado ao Google Drive com sucesso.
         </p>
       )}
 
       <div className="glass-panel" style={{ padding: "28px", maxWidth: "560px", marginBottom: "28px" }}>
         <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
-          OneDrive
+          Google Drive
         </h3>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
@@ -57,8 +57,8 @@ export default async function IntegracoesPage({ searchParams }) {
           >
             {!conectado ? "Desconectado" : ativa ? "Conectado" : "Reconexão necessária"}
           </span>
-          {conectado && integracao.email_conta_ms && (
-            <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{integracao.email_conta_ms}</span>
+          {conectado && integracao.email_conta_google && (
+            <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{integracao.email_conta_google}</span>
           )}
         </div>
 
@@ -76,11 +76,11 @@ export default async function IntegracoesPage({ searchParams }) {
 
         <div style={{ display: "flex", gap: "12px" }}>
           {!ativa ? (
-            <a href="/api/integracoes/onedrive/conectar">
-              <button type="button">{conectado ? "Reconectar" : "Conectar ao OneDrive"}</button>
+            <a href="/api/integracoes/googledrive/conectar">
+              <button type="button">{conectado ? "Reconectar" : "Conectar ao Google Drive"}</button>
             </a>
           ) : (
-            <DesconectarOneDriveButton />
+            <DesconectarGoogleDriveButton />
           )}
         </div>
       </div>
@@ -104,10 +104,10 @@ export default async function IntegracoesPage({ searchParams }) {
                 <strong>{p.titulo}</strong>
                 <p style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>
                   {p.nome_cliente || "Sem cliente definido"} ·{" "}
-                  {p.onedrive_atualizado_em ? new Date(p.onedrive_atualizado_em).toLocaleString("pt-BR") : "—"}
+                  {p.googledrive_atualizado_em ? new Date(p.googledrive_atualizado_em).toLocaleString("pt-BR") : "—"}
                 </p>
-                {p.onedrive_status === "falha" && p.onedrive_erro && (
-                  <p style={{ fontSize: "11px", color: "var(--danger)", marginTop: "4px" }}>{p.onedrive_erro}</p>
+                {p.googledrive_status === "falha" && p.googledrive_erro && (
+                  <p style={{ fontSize: "11px", color: "var(--danger)", marginTop: "4px" }}>{p.googledrive_erro}</p>
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -115,18 +115,18 @@ export default async function IntegracoesPage({ searchParams }) {
                   className="badge"
                   style={{
                     background:
-                      p.onedrive_status === "enviado" ? "var(--accent-glow)" : p.onedrive_status === "falha" ? "var(--danger-glow)" : "rgba(255,255,255,0.06)",
-                    color: p.onedrive_status === "enviado" ? "var(--accent)" : p.onedrive_status === "falha" ? "var(--danger)" : "var(--text-dim)",
+                      p.googledrive_status === "enviado" ? "var(--accent-glow)" : p.googledrive_status === "falha" ? "var(--danger-glow)" : "rgba(255,255,255,0.06)",
+                    color: p.googledrive_status === "enviado" ? "var(--accent)" : p.googledrive_status === "falha" ? "var(--danger)" : "var(--text-dim)",
                   }}
                 >
-                  {p.onedrive_status === "enviado" ? "Enviada" : p.onedrive_status === "falha" ? "Falhou" : "Enviando…"}
+                  {p.googledrive_status === "enviado" ? "Enviada" : p.googledrive_status === "falha" ? "Falhou" : "Enviando…"}
                 </span>
-                {p.onedrive_status === "enviado" && p.onedrive_link && (
-                  <a href={p.onedrive_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "var(--accent)" }}>
+                {p.googledrive_status === "enviado" && p.googledrive_link && (
+                  <a href={p.googledrive_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "var(--accent)" }}>
                     Abrir
                   </a>
                 )}
-                {p.onedrive_status === "falha" && <ReenviarOneDriveButton id={p.id} />}
+                {p.googledrive_status === "falha" && <ReenviarGoogleDriveButton id={p.id} />}
               </div>
             </div>
           ))}
