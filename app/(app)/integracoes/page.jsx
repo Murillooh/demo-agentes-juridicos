@@ -42,7 +42,7 @@ export default async function IntegracoesPage({ searchParams }) {
         </p>
       )}
 
-      <div className="glass-panel" style={{ padding: "28px", maxWidth: "560px", marginBottom: "28px" }}>
+      <div className="glass-panel" style={{ padding: "28px", marginBottom: "28px" }}>
         <h3 className="titulo-secao" style={{ marginBottom: "16px" }}>
           Google Drive
         </h3>
@@ -93,7 +93,7 @@ export default async function IntegracoesPage({ searchParams }) {
           Nenhuma petição enviada ainda. Acontece automaticamente quando uma petição chega em Protocolo no Board.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "820px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {peticoesComUpload.map((p) => (
             <div
               key={p.id}
