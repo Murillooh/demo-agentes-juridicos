@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { criarClienteSupabaseServidor, obterUsuario } from "../../lib/supabase/server";
+import { souPreviewAdmin } from "../../lib/admin";
 import Sidebar from "../../components/Sidebar";
 
 export default async function AppLayout({ children }) {
@@ -74,6 +75,7 @@ export default async function AppLayout({ children }) {
         email={advogado?.email || user.email}
         nomeEscritorio={advogado?.escritorios?.nome}
         permissoes={advogado?.permissoes}
+        ehPreviewAdmin={souPreviewAdmin(advogado?.email || user.email)}
       />
       <main className="app-main">{children}</main>
     </div>

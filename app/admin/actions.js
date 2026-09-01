@@ -1,11 +1,14 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { usuarioAdminDaRequisicao } from "../../lib/admin-servidor";
 import { criarClienteSupabaseAdmin } from "../../lib/supabase/admin";
+import { criarClienteSupabaseServidor } from "../../lib/supabase/server";
 import { gerarSenhaTemporaria } from "../../lib/senha-temporaria";
 import { TELAS } from "../../lib/permissoes";
 import { enviarEmail } from "../../lib/notificacoes/enviar-email";
+import { EMAIL_PREVIEW_ADVOGADO } from "../../lib/admin";
 
 const CHAVES_VALIDAS = TELAS.map((t) => t.chave);
 
@@ -208,4 +211,65 @@ export async function removerConta(advogadoId) {
   await supabaseAdmin.auth.admin.deleteUser(advogadoId);
   revalidatePath("/admin");
   return { sucesso: true };
+}
+
+// "Ver como advogado" - troca a sessão do admin pela de uma conta fixa
+// dentro do escritório is_demo=true (mesmo sandbox do fluxo público /demo,
+// já populado com petições/prazos/contratos de exemplo - dá pra clicar em
+// tudo de verdade em vez de tela vazia). Sem senha fixa guardada em lugar
+// nenhum: gera uma nova a cada clique via service role e faz login com ela
+// na hora, no mesmo cliente Supabase preso à requisição (mesmo client que
+// entrar() usa) - é o que troca o cookie de sessão de admin pro advogado
+// de visualização. Não tem como "voltar" automático (não é impersonação
+// de verdade, não guardamos a senha do admin) - Sidebar mostra um aviso
+// pra sair e entrar de novo com o login de admin.
+export async function entrarComoAdvogado() {
+  const admin = await usuarioAdminDaRequisicao();
+  if (!admin) return { erro: "Acesso restrito ao administrador." };
+
+  const supabaseAdmin = criarClienteSupabaseAdmin();
+  if (!supabaseAdmin) return { erro: "Não configurado neste ambiente (falta SUPABASE_SERVICE_ROLE_KEY)." };
+
+  const { data: escritorioDemo } = await supabaseAdmin.from("escritorios").select("id").eq("is_demo", true).maybeSingle();
+  if (!escritorioDemo) {
+    return { erro: "Escritório de demonstração ainda não existe (rode scripts/seed-demo.js)." };
+  }
+
+  const senha = gerarSenhaTemporaria();
+  let advogadoId;
+
+  const { data: advogadoExistente } = await supabaseAdmin.from("advogados").select("id").eq("email", EMAIL_PREVIEW_ADVOGADO).maybeSingle();
+
+  if (advogadoExistente) {
+    advogadoId = advogadoExistente.id;
+    await supabaseAdmin.auth.admin.updateUserById(advogadoId, { password: senha });
+  } else {
+    const { data: usuarioCriado, error: erroUsuario } = await supabaseAdmin.auth.admin.createUser({
+      email: EMAIL_PREVIEW_ADVOGADO,
+      password: senha,
+      email_confirm: true,
+    });
+    if (erroUsuario) return { erro: "Não foi possível preparar a conta de visualização." };
+    advogadoId = usuarioCriado.user.id;
+
+    const { error: erroAdvogado } = await supabaseAdmin.from("advogados").insert({
+      id: advogadoId,
+      escritorio_id: escritorioDemo.id,
+      nome: "Visualização (Admin)",
+      email: EMAIL_PREVIEW_ADVOGADO,
+      precisa_trocar_senha: false,
+      tour_visto: true, // não faz sentido mostrar o tour de 1º login pro admin
+      permissoes: null, // vê tudo, igual acesso demo padrão
+    });
+    if (erroAdvogado) {
+      await supabaseAdmin.auth.admin.deleteUser(advogadoId);
+      return { erro: "Não foi possível preparar a conta de visualização." };
+    }
+  }
+
+  const supabase = criarClienteSupabaseServidor();
+  const { error: erroLogin } = await supabase.auth.signInWithPassword({ email: EMAIL_PREVIEW_ADVOGADO, password: senha });
+  if (erroLogin) return { erro: "Não foi possível entrar na visualização." };
+
+  redirect("/dashboard");
 }

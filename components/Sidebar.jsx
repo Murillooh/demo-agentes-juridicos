@@ -31,14 +31,27 @@ function iniciais(nome, email) {
 // listado - mesma semântica de lib/permissoes.js. Filtro aqui é só
 // cosmético (esconde o link); o bloqueio de verdade é no middleware, que
 // não dá pra contornar digitando a URL direto.
-export default function Sidebar({ nome, email, nomeEscritorio, permissoes }) {
+export default function Sidebar({ nome, email, nomeEscritorio, permissoes, ehPreviewAdmin }) {
   const pathname = usePathname();
   const itensVisiveis = ITENS_NAV.filter((item) => !item.chave || !permissoes || permissoes.includes(item.chave));
 
   return (
     <aside className="sidebar">
       <div className="sidebar-topo">
-        <span className="badge">{nomeEscritorio}</span>
+        {ehPreviewAdmin ? (
+          // Sem isso essa conta fixa de visualização (lib/admin.js) fica
+          // idêntica a estar logado como um advogado de verdade - fácil de
+          // esquecer que é só um teste. Não tem "voltar" automático (a
+          // action não guarda a senha do admin) - só avisa como sair.
+          <div style={{ background: "var(--accent-glow)", border: "1px solid var(--border-strong)", borderRadius: "8px", padding: "10px 12px", marginBottom: "10px" }}>
+            <span className="badge" style={{ marginBottom: "4px" }}>
+              Modo visualização
+            </span>
+            <p style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.4 }}>Pra voltar, saia e entre com seu login de admin.</p>
+          </div>
+        ) : (
+          <span className="badge">{nomeEscritorio}</span>
+        )}
         <h1 className="sidebar-marca">Plataforma Jurídica</h1>
       </div>
 
